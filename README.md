@@ -1,2 +1,2 @@
 # riscv-simulator
-A simple 5 stages RISCV simulator
+A simple 5-stages RISCV simulator
