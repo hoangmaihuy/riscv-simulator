@@ -39,6 +39,5 @@ int main(int argc, char *argv[])
 
   /* Read ELF */
   elfPath = argv[optind];
-  auto simulator = new Simulator();
-  simulator->loadMemoryFromElf(elfPath);
+  auto simulator = new Simulator(elfPath);
 }

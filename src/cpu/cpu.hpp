@@ -13,14 +13,12 @@
 
 class CPU
 {
-private:
-  uint64_t registers[REGNUM]{};
-
 public:
+  uint64_t registers[REGNUM]{};
+  uint64_t pc;
+
   CPU();
-
   uint64_t read(unsigned int idx);
-
   void write(unsigned int idx, uint64_t value);
 
 };
