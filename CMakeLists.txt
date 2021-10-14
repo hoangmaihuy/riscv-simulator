@@ -3,4 +3,11 @@ project(riscv_simulator)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(riscv_simulator src/main.cpp)
+include_directories(src)
+include_directories(includes)
+
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/memory/*.cpp" "src/cpu/*.cpp" "src/simulator/*.cpp")
+
+set(SOURCES ${SOURCES})
+
+add_executable(riscv-simulator ${SOURCES})

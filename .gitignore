@@ -40,5 +40,6 @@ Makefile
 .vscode
 .idea
 
-riscv_simulator
+riscv-simulator
+riscv_simulator.cbp
 
