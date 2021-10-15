@@ -4,7 +4,7 @@
 
 #include "simulator.hpp"
 
-void Simulator::readElf()
+void Simulator::read_elf()
 {
   if (!elfReader.load(elfPath))
   {
@@ -13,7 +13,7 @@ void Simulator::readElf()
   }
 }
 
-void Simulator::loadMemory()
+void Simulator::load_memory()
 {
   for (auto segment : elfReader.segments)
     if (segment->get_type() == PT_LOAD)
@@ -27,7 +27,7 @@ void Simulator::loadMemory()
     }
 }
 
-void Simulator::initCpu()
+void Simulator::init_cpu()
 {
   cpu->pc = elfReader.get_entry();
 }
@@ -38,8 +38,8 @@ Simulator::Simulator(char *elfPath)
   memory = new Memory();
   cpu = new CPU();
 
-  readElf();
-  loadMemory();
-  initCpu();
+  read_elf();
+  load_memory();
+  init_cpu();
 }
 

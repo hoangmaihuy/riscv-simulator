@@ -33,7 +33,7 @@ typedef struct
   unsigned int funct7;
 } RVInstDef;
 
-extern const vector<RVInstDef> instTab;
+extern const vector<RVInstDef> InstTab;
 
 class RVInstruction
 {
@@ -52,38 +52,11 @@ public:
   unsigned int rd = 0;
   unsigned int imm = 0;
 
-  unsigned int getBits(unsigned int lo, unsigned int hi)
-  {
-    return inst << (31 - hi) >> (31 - hi + lo);
-  }
+  unsigned int get_bits(unsigned int lo, unsigned int hi);
 
-  RVInstDef searchInstTab() {
-    for (auto &instDef : instTab)
-    {
-      bool checkOpCode = opcode == instDef.opcode;
-      bool checkFunct3 = (instDef.funct3 == SKIP_FUNCT || instDef.funct3 == funct3);
-      bool checkFunct7 = (instDef.funct7 == SKIP_FUNCT || instDef.funct7 == funct7);
-      if (checkOpCode && checkFunct3 && checkFunct7)
-        return instDef;
-    }
-    fprintf(stderr, "Unknown instruction: opcode = 0x%x, funct3 = 0x%x, funct7 = 0x%x\n", opcode, funct3, funct7);
-    exit(1);
-  }
+  explicit RVInstruction(unsigned int inst);
 
-  RVInstruction(unsigned int inst)
-  {
-    this->inst = inst;
-    opcode = getBits(0, 6);
-    funct3 = getBits(12, 14);
-    funct7 = getBits(25, 31);
-    rs1 = getBits(15, 19);
-    rs2 = getBits(20, 24);
-    rd = getBits(7, 11);
-
-    auto instDef = searchInstTab();
-    op = instDef.op;
-    type = instDef.type;
-  }
+  void decode();
 
 };
 

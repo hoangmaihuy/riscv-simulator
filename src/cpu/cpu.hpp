@@ -18,7 +18,9 @@ public:
   uint64_t pc;
 
   CPU();
+
   uint64_t read(unsigned int idx);
+
   void write(unsigned int idx, uint64_t value);
 
 };

@@ -8,7 +8,7 @@
 #include "memory/memory.hpp"
 #include "cpu/cpu.hpp"
 #include "elfio/elfio.hpp"
-#include "isa/riscv.hpp"
+#include "riscv/riscv.hpp"
 
 class Simulator
 {
@@ -20,9 +20,9 @@ private:
 
 public:
   Simulator(char *elfPath);
-  void readElf();
-  void loadMemory();
-  void initCpu();
+  void read_elf();
+  void load_memory();
+  void init_cpu();
 
   void sFetch();
 };
