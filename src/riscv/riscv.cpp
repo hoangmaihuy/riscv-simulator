@@ -1,7 +1,7 @@
 //
 // Created by Mai Hoàng on 15/10/2021.
 //
-
+#include "cpu/cpu.hpp"
 #include "riscv.hpp"
 
 /* Search instruction tab */
@@ -35,9 +35,10 @@ RVInstruction::RVInstruction(unsigned int inst)
 
   decode();
 
-  switch (type) {
+  switch (type)
+  {
     case TYPE_R:
-      rd = get_bits(7,11);
+      rd = get_bits(7, 11);
       rs1 = get_bits(15, 19);
       rs2 = get_bits(20, 24);
       break;
@@ -69,4 +70,180 @@ RVInstruction::RVInstruction(unsigned int inst)
 unsigned int RVInstruction::get_bits(unsigned int lo, unsigned int hi)
 {
   return inst << (31 - hi) >> (31 - hi + lo);
+}
+
+string RVInstruction::to_str()
+{
+  switch (type)
+  {
+    case TYPE_R:
+      return type_r_str();
+    case TYPE_I:
+      return type_i_str();
+    case TYPE_S:
+      return type_s_str();
+    case TYPE_SB:
+      return type_sb_str();
+    case TYPE_U:
+      return type_u_str();
+    case TYPE_UJ:
+      return type_uj_str();
+    default:
+      return "";
+  }
+}
+
+const char *get_opname(RVInstOp op)
+{
+  switch (op)
+  {
+    case OP_ADD:
+      return "add";
+    case OP_MUL:
+      return "mul";
+    case OP_SUB:
+      return "sub";
+    case OP_SLL:
+      return "sll";
+    case OP_MULH:
+      return "mulh";
+    case OP_SLT:
+      return "slt";
+    case OP_XOR:
+      return "xor";
+    case OP_DIV:
+      return "div";
+    case OP_SRL:
+      return "srl";
+    case OP_SRA:
+      return "sra";
+    case OP_OR:
+      return "or";
+    case OP_REM:
+      return "rem";
+    case OP_AND:
+      return "and";
+    case OP_ADDW:
+      return "addw";
+    case OP_SUBW:
+      return "subw";
+    case OP_MULW:
+      return "mulw";
+    case OP_DIVW:
+      return "divw";
+    case OP_REMW:
+      return "remw";
+    case OP_LB:
+      return "lb";
+    case OP_LH:
+      return "lh";
+    case OP_LW:
+      return "lw";
+    case OP_LD:
+      return "ld";
+    case OP_ADDI:
+      return "addi";
+    case OP_SLLI:
+      return "slli";
+    case OP_SLTI:
+      return "slti";
+    case OP_XORI:
+      return "xori";
+    case OP_SRLI:
+      return "srli";
+    case OP_SRAI:
+      return "srai";
+    case OP_ORI:
+      return "ori";
+    case OP_ANDI:
+      return "andi";
+    case OP_ADDIW:
+      return "addiw";
+    case OP_JALR:
+      return "jalr";
+    case OP_ECALL:
+      return "ecall";
+    case OP_SB:
+      return "sb";
+    case OP_SH:
+      return "sh";
+    case OP_SW:
+      return "sw";
+    case OP_SD:
+      return "sd";
+    case OP_BEQ:
+      return "beq";
+    case OP_BNE:
+      return "bne";
+    case OP_BLT:
+      return "blt";
+    case OP_BGE:
+      return "bge";
+    case OP_AUIPC:
+      return "auipc";
+    case OP_LUI:
+      return "lui";
+    case OP_JAL:
+      return "jal";
+    default:
+      fprintf(stderr, "Unknown op: %d\n", op);
+      exit(1);
+  }
+}
+
+string RVInstruction::type_r_str() const
+{
+  auto opname = get_opname(op);
+  char buf[MAX_INST_LENGTH];
+  sprintf(buf, "%s %s, %s, %s", opname, get_regname(rd), get_regname(rs1),
+          get_regname(rs2));
+  return {buf};
+}
+
+string RVInstruction::type_i_str() const
+{
+  auto opname = get_opname(op);
+  char buf[MAX_INST_LENGTH];
+  switch (op)
+  {
+    case OP_LB:
+    case OP_LH:
+    case OP_LW:
+    case OP_LD:
+      sprintf(buf, "%s, %s, offset(%s)", opname, get_regname(rd), get_regname(rs1));
+      break;
+    case OP_ECALL:
+      sprintf(buf, "ecall");
+    default:
+      sprintf(buf, "%s %s, %s, 0x%x", opname, get_regname(rd), get_regname(rs1), imm);
+  }
+  return {buf};
+}
+
+string RVInstruction::type_s_str() const
+{
+  char buf[MAX_INST_LENGTH];
+  sprintf(buf, "%s %s, 0x%x(%s)", get_opname(op), get_regname(rs2), imm, get_regname(rs1));
+  return {buf};
+}
+
+string RVInstruction::type_sb_str() const
+{
+  char buf[MAX_INST_LENGTH];
+  sprintf(buf, "%s %s, %s, 0x%x", get_opname(op), get_regname(rs1), get_regname(rs2), imm);
+  return {buf};
+}
+
+string RVInstruction::type_u_str() const
+{
+  char buf[MAX_INST_LENGTH];
+  sprintf(buf, "%s %s, 0x%x", get_opname(op), get_regname(rd), imm);
+  return {buf};
+}
+
+string RVInstruction::type_uj_str() const
+{
+  char buf[MAX_INST_LENGTH];
+  sprintf(buf, "%s %s, 0x%x", get_opname(op), get_regname(rd), imm);
+  return {buf};
 }

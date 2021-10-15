@@ -8,6 +8,8 @@
 #include "global.hpp"
 
 #define SKIP_FUNCT (unsigned int)-1
+#define MAX_INST_LENGTH 50
+#define INST_SIZE 4
 
 enum RVInstOp
 {
@@ -23,6 +25,7 @@ enum RVInstType
   TYPE_R, TYPE_I, TYPE_S, TYPE_SB, TYPE_U, TYPE_UJ
 };
 
+const char *get_opname(RVInstOp op);
 
 typedef struct
 {
@@ -58,6 +61,20 @@ public:
 
   void decode();
 
+  string to_str();
+
+private:
+  string type_r_str() const;
+
+  string type_i_str() const;
+
+  string type_s_str() const;
+
+  string type_sb_str() const;
+
+  string type_u_str() const;
+
+  string type_uj_str() const;
 };
 
 #endif //RISCV_SIMULATOR_RISCV_HPP

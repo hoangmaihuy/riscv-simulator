@@ -11,18 +11,28 @@
 
 #define REGNUM 32
 
+extern const char *regnames[REGNUM];
+
+const char *get_regname(unsigned int reg);
+
 class CPU
 {
-public:
-  uint64_t registers[REGNUM]{};
+private:
+  uint64_t regs[REGNUM]{};
+
   uint64_t pc;
 
+public:
   CPU();
 
-  uint64_t read(unsigned int idx);
 
-  void write(unsigned int idx, uint64_t value);
+  uint64_t get_pc() const;
 
+  void set_pc(unsigned int value);
+
+  uint64_t get_reg(unsigned int reg);
+
+  void set_reg(unsigned int reg, uint64_t value);
 };
 
 

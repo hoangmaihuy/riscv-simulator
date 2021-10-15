@@ -301,7 +301,7 @@ typedef uint64_t Elf64_Off;
 #define EM_KMX8            213 // KM211 KMX8 8-bit processor
 #define EM_KVARC           214 // KM211 KVARC processor
 #define EM_CDP             215 // Paneve CDP architecture family
-#define EM_COGE            216 // Cognitive Smart Memory Processor
+#define EM_COGE            216 // Cognitive Smart VirtualMemory Processor
 #define EM_COOL            217 // iCelero CoolEngine
 #define EM_NORC            218 // Nanoradio Optimized RISC
 #define EM_CSR_KALIMBA     219 // CSR Kalimba architecture family

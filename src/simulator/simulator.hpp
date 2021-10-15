@@ -16,7 +16,9 @@ private:
   char* elfPath;
   ELFIO::elfio elfReader;
   CPU *cpu;
-  Memory *memory;
+  VirtualMemory *memory;
+
+  RVInstruction *inst;
 
 public:
   Simulator(char *elfPath);
@@ -24,7 +26,13 @@ public:
   void load_memory();
   void init_cpu();
 
-  void sFetch();
+  /* Sequential execution */
+  void s_fetch();
+  void s_decode();
+  void s_execute();
+  void s_memory();
+  void s_writeback();
+  void s_pcupdate();
 };
 
 

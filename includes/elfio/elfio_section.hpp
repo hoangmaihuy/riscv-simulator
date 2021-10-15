@@ -206,7 +206,7 @@ template <class T> class section_impl : public section
             if ( ( 0 != size ) && ( 0 != data ) ) {
                 stream.seekg( ( *convertor )( header.sh_offset ) );
                 stream.read( data, size );
-                data[size] = 0; // Ensure data is ended with 0 to avoid oob read
+                data[size] = 0; // Ensure data is ended with 0 to avoid oob get_reg
                 data_size  = size;
             }
             else {

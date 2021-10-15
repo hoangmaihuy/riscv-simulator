@@ -816,7 +816,7 @@ class elfio
 
             // If we already have a memory size from loading an elf file (value > 0),
             // it must not shrink!
-            // Memory size may be bigger than file size and it is the loader's job to do something
+            // VirtualMemory size may be bigger than file size and it is the loader's job to do something
             // with the surplus bytes in memory, like initializing them with a defined value.
             if ( seg->get_memory_size() < segment_memory ) {
                 seg->set_memory_size( segment_memory );

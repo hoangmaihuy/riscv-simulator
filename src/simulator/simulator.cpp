@@ -15,7 +15,7 @@ void Simulator::read_elf()
 
 void Simulator::load_memory()
 {
-  for (auto segment : elfReader.segments)
+  for (auto segment: elfReader.segments)
     if (segment->get_type() == PT_LOAD)
     {
       auto memAddr = segment->get_virtual_address();
@@ -23,19 +23,19 @@ void Simulator::load_memory()
       auto flags = segment->get_flags();
       auto data = segment->get_data();
 
-      memory->insertArea(memAddr, memSize, flags, data);
+      memory->insert_vma(memAddr, memSize, flags, data);
     }
 }
 
 void Simulator::init_cpu()
 {
-  cpu->pc = elfReader.get_entry();
+  cpu->set_pc(elfReader.get_entry());
 }
 
 Simulator::Simulator(char *elfPath)
 {
   this->elfPath = elfPath;
-  memory = new Memory();
+  memory = new VirtualMemory();
   cpu = new CPU();
 
   read_elf();

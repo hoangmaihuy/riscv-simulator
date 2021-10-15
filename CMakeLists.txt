@@ -8,6 +8,6 @@ include_directories(includes)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/riscv/*.cpp" "src/memory/*.cpp" "src/cpu/*.cpp" "src/simulator/*.cpp")
 
-set(SOURCES ${SOURCES})
+set(SOURCES ${SOURCES} src/memory/vma.cpp)
 
 add_executable(riscv-simulator ${SOURCES})
