@@ -13,26 +13,55 @@
 class Simulator
 {
 private:
-  char* elfPath;
+  char *elfPath;
   ELFIO::elfio elfReader;
   CPU *cpu;
   VirtualMemory *memory;
 
+  /* Fetch result */
   RVInstruction *inst;
+  uint64_t valP; // next PC
+
+  /* Decode result */
+  uint64_t dstE;
+  int64_t valA; // reg[rs1]
+  int64_t valB; // reg[rs2]
+  int64_t valC; // imm
+
+  /* Execute result */
+  int64_t valE;
+  bool cc;
+
+  /* Memory result */
+  int64_t valM;
 
 public:
   Simulator(char *elfPath);
+
   void read_elf();
+
   void load_memory();
+
   void init_cpu();
 
+private:
   /* Sequential execution */
-  void s_fetch();
-  void s_decode();
-  void s_execute();
-  void s_memory();
-  void s_writeback();
-  void s_pcupdate();
+  void fetch();
+
+  void decode();
+
+  void execute();
+
+  void memaccess();
+
+  void writeback();
+
+  void pcupdate();
+
+  void run_cycle();
+
+public:
+  void run_sequential(bool single_step_mode);
 };
 
 

@@ -58,6 +58,8 @@ const vector<RVInstDef> InstTab = {
     {OP_BNE,   TYPE_SB, 0x63, 0x1,        SKIP_FUNCT},
     {OP_BLT,   TYPE_SB, 0x63, 0x4,        SKIP_FUNCT},
     {OP_BGE,   TYPE_SB, 0x63, 0x5,        SKIP_FUNCT},
+    {OP_BLTU,   TYPE_SB, 0x63, 0x6,        SKIP_FUNCT},
+    {OP_BGEU,   TYPE_SB, 0x63, 0x7,        SKIP_FUNCT},
 
     /* U-Type instructions */
     {OP_AUIPC, TYPE_U,  0x17, SKIP_FUNCT, SKIP_FUNCT},

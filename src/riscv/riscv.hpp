@@ -17,7 +17,7 @@ enum RVInstOp
   OP_SRA, OP_OR, OP_REM, OP_AND, OP_ADDW, OP_SUBW, OP_MULW, OP_DIVW, OP_REMW,
   OP_LB, OP_LH, OP_LW, OP_LD, OP_ADDI, OP_SLLI, OP_SLTI, OP_XORI, OP_SRLI, OP_SRAI,
   OP_ORI, OP_ANDI, OP_ADDIW, OP_JALR, OP_ECALL, OP_SB, OP_SH, OP_SW, OP_SD, OP_BEQ,
-  OP_BNE, OP_BLT, OP_BGE, OP_AUIPC, OP_LUI, OP_JAL
+  OP_BNE, OP_BLT, OP_BGE, OP_BLTU, OP_BGEU, OP_AUIPC, OP_LUI, OP_JAL
 };
 
 enum RVInstType
@@ -53,7 +53,7 @@ public:
   unsigned int rs1 = 0;
   unsigned int rs2 = 0;
   unsigned int rd = 0;
-  unsigned int imm = 0;
+  int imm = 0;
 
   unsigned int get_bits(unsigned int lo, unsigned int hi);
 

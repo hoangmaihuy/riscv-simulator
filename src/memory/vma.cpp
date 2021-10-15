@@ -4,14 +4,14 @@
 
 #include "memory.hpp"
 
-VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flags, const char *data)
+VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flags, const char *data, uint64_t data_size)
 {
   this->start = start;
   this->size = size;
   this->flags = flags;
   this->data = static_cast<char *>(malloc(size));
   memset(this->data, 0, size);
-  memcpy(this->data, (char *) data, sizeof(data));
+  memcpy(this->data, (char *) data, data_size);
 }
 
 VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size)
@@ -24,6 +24,6 @@ VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size)
 
 bool VirtualMemoryArea::operator<(const VirtualMemoryArea &that) const
 {
-  return start < that.start;
+  return start + size <= that.start;
 }
 

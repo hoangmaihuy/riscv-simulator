@@ -22,8 +22,9 @@ void Simulator::load_memory()
       auto memSize = segment->get_memory_size();
       auto flags = segment->get_flags();
       auto data = segment->get_data();
+      auto dataSize = segment->get_file_size();
 
-      memory->insert_vma(memAddr, memSize, flags, data);
+      memory->insert_vma(memAddr, memSize, flags, data, dataSize);
     }
 }
 

@@ -15,7 +15,7 @@ public:
   uint8_t flags;
   char *data;
 
-  VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flags, const char *data);
+  VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flags, const char *data, uint64_t data_size);
 
   VirtualMemoryArea(uint64_t start, uint64_t size);
 
@@ -28,13 +28,15 @@ private:
   set<VirtualMemoryArea> areas;
 
 public:
-  void insert_vma(uint64_t start, uint64_t size, uint8_t flags, const char *data);
+  void insert_vma(uint64_t start, uint64_t size, uint8_t flags, const char *data, uint64_t data_size);
 
   VirtualMemoryArea find_vma(uint64_t addr, uint64_t size);
 
-  /* Read 4 bytes */
-  uint32_t read(uint64_t addr, bool executable);
-  uint64_t readw(uint64_t addr);
+  /* Read up to 8 bytes */
+  uint64_t read(uint64_t addr, unsigned int size, bool executable = false);
+
+  /* Write up to 8 bytes */
+  void write(uint64_t addr, unsigned int size, uint64_t data);
 
 };
 

@@ -41,26 +41,33 @@ RVInstruction::RVInstruction(unsigned int inst)
       rd = get_bits(7, 11);
       rs1 = get_bits(15, 19);
       rs2 = get_bits(20, 24);
+      imm = 0;
       break;
     case TYPE_I:
       rd = get_bits(7, 11);
       rs1 = get_bits(15, 19);
-      imm = get_bits(20, 31);
+      imm = (int) get_bits(20, 31) << 20 >> 20;
       break;
     case TYPE_S:
       rs1 = get_bits(15, 19);
       rs2 = get_bits(20, 24);
-      imm = (get_bits(25, 31) << 5) | get_bits(7, 11);
+      imm = (int) ((get_bits(25, 31) << 5) | get_bits(7, 11)) << 20 >> 20;
+      break;
     case TYPE_SB:
       rs1 = get_bits(15, 19);
       rs2 = get_bits(20, 24);
-      imm = (get_bits(31, 31) << 12) | (get_bits(7, 7) << 11) | (get_bits(25, 30) << 5) | (get_bits(8, 11) << 1);
+      imm = (int) ((get_bits(31, 31) << 12) | (get_bits(7, 7) << 11) | (get_bits(25, 30) << 5) | (get_bits(8, 11) << 1))
+          << 20 >> 20;
+      break;
     case TYPE_U:
       rd = get_bits(7, 11);
-      imm = get_bits(12, 31) << 12;
+      imm = (int) (get_bits(12, 31) << 12);
+      break;
     case TYPE_UJ:
       rd = get_bits(7, 11);
-      imm = (get_bits(31, 31) << 20) | (get_bits(12, 19) << 12) | (get_bits(20, 20) << 11) | (get_bits(21, 30) << 1);
+      imm = (int) ((get_bits(31, 31) << 20) | (get_bits(12, 19) << 12) | (get_bits(20, 20) << 11) |
+                   (get_bits(21, 30) << 1)) << 11 >> 11;
+      break;
     default:
       fprintf(stderr, "Unknown instruction type: %d\n", type);
       exit(1);
@@ -179,6 +186,10 @@ const char *get_opname(RVInstOp op)
       return "blt";
     case OP_BGE:
       return "bge";
+    case OP_BLTU:
+      return "bltu";
+    case OP_BGEU:
+      return "bgeu";
     case OP_AUIPC:
       return "auipc";
     case OP_LUI:
@@ -210,12 +221,13 @@ string RVInstruction::type_i_str() const
     case OP_LH:
     case OP_LW:
     case OP_LD:
-      sprintf(buf, "%s, %s, offset(%s)", opname, get_regname(rd), get_regname(rs1));
+      sprintf(buf, "%s, %s, %d(%s)", opname, get_regname(rd), imm, get_regname(rs1));
       break;
     case OP_ECALL:
       sprintf(buf, "ecall");
+      break;
     default:
-      sprintf(buf, "%s %s, %s, 0x%x", opname, get_regname(rd), get_regname(rs1), imm);
+      sprintf(buf, "%s %s, %s, %d", opname, get_regname(rd), get_regname(rs1), imm);
   }
   return {buf};
 }
@@ -223,27 +235,27 @@ string RVInstruction::type_i_str() const
 string RVInstruction::type_s_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, 0x%x(%s)", get_opname(op), get_regname(rs2), imm, get_regname(rs1));
+  sprintf(buf, "%s %s, %d(%s)", get_opname(op), get_regname(rs2), imm, get_regname(rs1));
   return {buf};
 }
 
 string RVInstruction::type_sb_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, %s, 0x%x", get_opname(op), get_regname(rs1), get_regname(rs2), imm);
+  sprintf(buf, "%s %s, %s, %d", get_opname(op), get_regname(rs1), get_regname(rs2), imm);
   return {buf};
 }
 
 string RVInstruction::type_u_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, 0x%x", get_opname(op), get_regname(rd), imm);
+  sprintf(buf, "%s %s, %d", get_opname(op), get_regname(rd), imm);
   return {buf};
 }
 
 string RVInstruction::type_uj_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, 0x%x", get_opname(op), get_regname(rd), imm);
+  sprintf(buf, "%s %s, %d", get_opname(op), get_regname(rd), imm);
   return {buf};
 }
