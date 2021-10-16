@@ -46,7 +46,7 @@ const vector<RVInstDef> InstTab = {
     {"andi",  OP_ANDI,  TYPE_I,  0x13, 0x7,        SKIP_FUNCT},
     {"slli",  OP_SLLI,  TYPE_I,  0x13, 0x1, 0x00},
     {"srli",  OP_SRLI,  TYPE_I,  0x13, 0x5, 0x00},
-    {"srai",  OP_SRAI,  TYPE_I,  0x13, 0x5, 0x20},
+    {"srai",  OP_SRAI,  TYPE_I,  0x13, 0x5, 0x10},
 
     {"addiw", OP_ADDIW, TYPE_I,  0x1b, 0x0,        SKIP_FUNCT},
     {"slliw", OP_SLLIW, TYPE_I,  0x1b, 0x1, 0x00},
