@@ -20,7 +20,8 @@ void RVInstruction::decode()
       return;
     }
   }
-  fprintf(stderr, "Unknown instruction: inst = %x, addr = 0x%llx, opcode = 0x%x, funct3 = 0x%x, funct7 = 0x%x\n", inst, addr, opcode, funct3, funct7);
+  fprintf(stderr, "Unknown instruction: addr = 0x%llx, inst = %x, opcode = 0x%x, funct3 = 0x%x, funct7 = 0x%x\n", addr,
+          inst, opcode, funct3, funct7);
   exit(1);
 }
 
@@ -34,6 +35,10 @@ RVInstruction::RVInstruction(unsigned int inst, uint64_t addr)
   rs1 = get_bits(15, 19);
   rs2 = get_bits(20, 24);
   rd = get_bits(7, 11);
+
+  /* SLLI, SRLI, SRAI only have 6-bits funct7 */
+  if (opcode == 0x13 && (funct3 == 0x1 || funct3 == 0x5))
+    funct7 >>= 1;
 
   decode();
 

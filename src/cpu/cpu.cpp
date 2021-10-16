@@ -45,3 +45,16 @@ const char *get_regname(unsigned int reg)
   assert(reg < REGNUM);
   return regnames[reg];
 }
+
+unsigned int reg(const char *regname)
+{
+  for (unsigned int i = 0; i < REGNUM; i++)
+  {
+    if (strcmp(regname, regnames[i]) == 0)
+    {
+      return i;
+    }
+  }
+  fprintf(stderr, "Unknown register: %s\n", regname);
+  exit(1);
+}

@@ -18,6 +18,7 @@ class Simulator
 private:
   char *elfPath;
   uint64_t endPC;
+  int exit_code;
 
   ELFIO::elfio elfReader;
   CPU *cpu;
@@ -48,6 +49,8 @@ public:
   void load_memory();
 
   void init_cpu();
+
+  void syscall();
 
 private:
   /* Sequential execution */

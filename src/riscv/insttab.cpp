@@ -35,20 +35,23 @@ const vector<RVInstDef> InstTab = {
     {"lw",    OP_LW,    TYPE_I,  0x03, 0x2,        SKIP_FUNCT},
     {"ld",    OP_LD,    TYPE_I,  0x03, 0x3,        SKIP_FUNCT},
 
-    {"lbu",    OP_LBU,    TYPE_I,  0x03, 0x4,        SKIP_FUNCT},
-    {"lhu",    OP_LHU,    TYPE_I,  0x03, 0x5,        SKIP_FUNCT},
-    {"lwu",    OP_LWU,    TYPE_I,  0x03, 0x6,        SKIP_FUNCT},
+    {"lbu",   OP_LBU,   TYPE_I,  0x03, 0x4,        SKIP_FUNCT},
+    {"lhu",   OP_LHU,   TYPE_I,  0x03, 0x5,        SKIP_FUNCT},
+    {"lwu",   OP_LWU,   TYPE_I,  0x03, 0x6,        SKIP_FUNCT},
 
     {"addi",  OP_ADDI,  TYPE_I,  0x13, 0x0,        SKIP_FUNCT},
-    {"slli",  OP_SLLI,  TYPE_I,  0x13, 0x1, 0x00},
     {"slti",  OP_SLTI,  TYPE_I,  0x13, 0x2,        SKIP_FUNCT},
     {"xori",  OP_XORI,  TYPE_I,  0x13, 0x4,        SKIP_FUNCT},
-    {"srli",  OP_SRLI,  TYPE_I,  0x13, 0x5, 0x00},
-    {"srai",  OP_SRAI,  TYPE_I,  0x13, 0x5, 0x20},
     {"ori",   OP_ORI,   TYPE_I,  0x13, 0x6,        SKIP_FUNCT},
     {"andi",  OP_ANDI,  TYPE_I,  0x13, 0x7,        SKIP_FUNCT},
+    {"slli",  OP_SLLI,  TYPE_I,  0x13, 0x1, 0x00},
+    {"srli",  OP_SRLI,  TYPE_I,  0x13, 0x5, 0x00},
+    {"srai",  OP_SRAI,  TYPE_I,  0x13, 0x5, 0x20},
 
     {"addiw", OP_ADDIW, TYPE_I,  0x1b, 0x0,        SKIP_FUNCT},
+    {"slliw", OP_SLLIW, TYPE_I,  0x1b, 0x1, 0x00},
+    {"srliw", OP_SRLIW, TYPE_I,  0x1b, 0x5, 0x00},
+    {"sraiw", OP_SRAIW, TYPE_I,  0x1b, 0x5, 0x20},
 
     {"salr",  OP_JALR,  TYPE_I,  0x67, 0x0,        SKIP_FUNCT},
 
