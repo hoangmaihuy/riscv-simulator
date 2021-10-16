@@ -40,15 +40,17 @@ VirtualMemoryArea VirtualMemory::find_vma(uint64_t addr, uint64_t size)
 uint64_t VirtualMemory::read(uint64_t addr, unsigned int size, bool executable)
 {
   assert(size > 0 && size <= 8);
+  if (verbose)
+    fprintf(stderr, "read: addr = 0x%llx, size = %d\n", addr, size);
   auto vma = find_vma(addr, size);
   if (!(vma.flags & PF_R))
   {
-    fprintf(stderr, "read memory error: read permission, addr = 0x%llx\n", addr);
+    fprintf(stderr, "read: no R permission, addr = 0x%llx\n", addr);
     exit(1);
   }
   if (executable && !(vma.flags & PF_X))
   {
-    fprintf(stderr, "read memory error: execute permission, addr = 0x%llx\n", addr);
+    fprintf(stderr, "read: no X permission, addr = 0x%llx\n", addr);
     exit(1);
   }
   auto idx = addr - vma.start;
@@ -64,6 +66,8 @@ uint64_t VirtualMemory::read(uint64_t addr, unsigned int size, bool executable)
 void VirtualMemory::write(uint64_t addr, unsigned int size, uint64_t data)
 {
   assert(size > 0 && size <= 8);
+  if (verbose)
+    fprintf(stderr, "read: write = 0x%llx, size = %d, data = %llx\n", addr, size, data);
   auto vma = find_vma(addr, size);
   if (!(vma.flags & PF_W))
   {

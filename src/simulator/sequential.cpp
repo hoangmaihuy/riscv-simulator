@@ -8,14 +8,11 @@ void Simulator::fetch()
 {
   valP = cpu->get_pc();
   auto instRaw = (uint32_t) memory->read(valP, INST_SIZE, true);
-  fprintf(stderr, "fetch: addr = 0x%llx, inst = %x\n", valP, instRaw);
   if (inst)
     free(inst);
-  inst = new RVInstruction(instRaw);
+  inst = new RVInstruction(instRaw, valP);
   if (verbose)
-  {
-    fprintf(stderr, "fetch: %s\n", inst->to_str().c_str());
-  }
+    fprintf(stderr, "fetch: %llx:  %x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
 }
 
 void Simulator::decode()
@@ -95,7 +92,7 @@ void Simulator::execute()
       valE = valA / valB;
       break;
     case OP_SRL:
-      valE = (uint64_t) valA >> valB;
+      valE = (int64_t) ((uint64_t) valA >> valB);
       break;
     case OP_SRA:
       valE = valA >> valB;
@@ -124,11 +121,23 @@ void Simulator::execute()
     case OP_REMW:
       valE = (int32_t) ((int32_t) valA % (int32_t) valB);
       break;
+    case OP_SLLW:
+      valE = (int32_t) ((int32_t) valA << (uint32_t) valB);
+      break;
+    case OP_SRLW:
+      valE = (int32_t) ((uint32_t) valA >> (uint32_t) valB);
+      break;
+    case OP_SRAW:
+      valE = (int32_t) ((int32_t) valA >> (uint32_t) valB);
+      break;
       /* I-Type instructions */
     case OP_LB:
     case OP_LH:
     case OP_LW:
     case OP_LD:
+    case OP_LBU:
+    case OP_LHU:
+    case OP_LWU:
       valE = valA + valC; // reg[rs1] + offset
       break;
     case OP_ADDI:
@@ -173,6 +182,7 @@ void Simulator::execute()
       break;
       /* SB-Type instructions */
     case OP_BEQ:
+      fprintf(stderr, "beq: valA = %lld, valB = %lld\n", valA, valB);
       cc = valA == valB;
       valE = valP + valC;
       break;
@@ -225,6 +235,15 @@ void Simulator::memaccess()
       break;
     case OP_LD:
       valM = (int64_t) memory->read(valE, 8);
+      break;
+    case OP_LBU:
+      valM = (int64_t) (uint8_t) memory->read(valE, 1);
+      break;
+    case OP_LHU:
+      valM = (int64_t) (uint16_t) memory->read(valE, 2);
+      break;
+    case OP_LWU:
+      valM = (int64_t) (uint32_t) memory->read(valE, 4);
       break;
     case OP_SB:
       memory->write(valE, 1, valB);
@@ -312,6 +331,7 @@ void Simulator::pcupdate()
 
 void Simulator::run_cycle()
 {
+  cpu->set_reg(0, 0);
   fetch();
   decode();
   execute();
@@ -337,4 +357,10 @@ void Simulator::run_sequential(bool single_step_mode)
     }
   }
 
+}
+
+void Simulator::run_all()
+{
+  while (cpu->get_pc())
+    run_cycle();
 }

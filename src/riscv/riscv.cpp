@@ -16,16 +16,18 @@ void RVInstruction::decode()
     {
       op = instDef.op;
       type = instDef.type;
+      opname = instDef.opname;
       return;
     }
   }
-  fprintf(stderr, "Unknown instruction: opcode = 0x%x, funct3 = 0x%x, funct7 = 0x%x\n", opcode, funct3, funct7);
+  fprintf(stderr, "Unknown instruction: inst = %x, addr = 0x%llx, opcode = 0x%x, funct3 = 0x%x, funct7 = 0x%x\n", inst, addr, opcode, funct3, funct7);
   exit(1);
 }
 
-RVInstruction::RVInstruction(unsigned int inst)
+RVInstruction::RVInstruction(unsigned int inst, uint64_t addr)
 {
   this->inst = inst;
+  this->addr = addr;
   opcode = get_bits(0, 6);
   funct3 = get_bits(12, 14);
   funct7 = get_bits(25, 31);
@@ -100,111 +102,8 @@ string RVInstruction::to_str()
   }
 }
 
-const char *get_opname(RVInstOp op)
-{
-  switch (op)
-  {
-    case OP_ADD:
-      return "add";
-    case OP_MUL:
-      return "mul";
-    case OP_SUB:
-      return "sub";
-    case OP_SLL:
-      return "sll";
-    case OP_MULH:
-      return "mulh";
-    case OP_SLT:
-      return "slt";
-    case OP_XOR:
-      return "xor";
-    case OP_DIV:
-      return "div";
-    case OP_SRL:
-      return "srl";
-    case OP_SRA:
-      return "sra";
-    case OP_OR:
-      return "or";
-    case OP_REM:
-      return "rem";
-    case OP_AND:
-      return "and";
-    case OP_ADDW:
-      return "addw";
-    case OP_SUBW:
-      return "subw";
-    case OP_MULW:
-      return "mulw";
-    case OP_DIVW:
-      return "divw";
-    case OP_REMW:
-      return "remw";
-    case OP_LB:
-      return "lb";
-    case OP_LH:
-      return "lh";
-    case OP_LW:
-      return "lw";
-    case OP_LD:
-      return "ld";
-    case OP_ADDI:
-      return "addi";
-    case OP_SLLI:
-      return "slli";
-    case OP_SLTI:
-      return "slti";
-    case OP_XORI:
-      return "xori";
-    case OP_SRLI:
-      return "srli";
-    case OP_SRAI:
-      return "srai";
-    case OP_ORI:
-      return "ori";
-    case OP_ANDI:
-      return "andi";
-    case OP_ADDIW:
-      return "addiw";
-    case OP_JALR:
-      return "jalr";
-    case OP_ECALL:
-      return "ecall";
-    case OP_SB:
-      return "sb";
-    case OP_SH:
-      return "sh";
-    case OP_SW:
-      return "sw";
-    case OP_SD:
-      return "sd";
-    case OP_BEQ:
-      return "beq";
-    case OP_BNE:
-      return "bne";
-    case OP_BLT:
-      return "blt";
-    case OP_BGE:
-      return "bge";
-    case OP_BLTU:
-      return "bltu";
-    case OP_BGEU:
-      return "bgeu";
-    case OP_AUIPC:
-      return "auipc";
-    case OP_LUI:
-      return "lui";
-    case OP_JAL:
-      return "jal";
-    default:
-      fprintf(stderr, "Unknown op: %d\n", op);
-      exit(1);
-  }
-}
-
 string RVInstruction::type_r_str() const
 {
-  auto opname = get_opname(op);
   char buf[MAX_INST_LENGTH];
   sprintf(buf, "%s %s, %s, %s", opname, get_regname(rd), get_regname(rs1),
           get_regname(rs2));
@@ -213,7 +112,6 @@ string RVInstruction::type_r_str() const
 
 string RVInstruction::type_i_str() const
 {
-  auto opname = get_opname(op);
   char buf[MAX_INST_LENGTH];
   switch (op)
   {
@@ -221,7 +119,7 @@ string RVInstruction::type_i_str() const
     case OP_LH:
     case OP_LW:
     case OP_LD:
-      sprintf(buf, "%s, %s, %d(%s)", opname, get_regname(rd), imm, get_regname(rs1));
+      sprintf(buf, "%s %s, %d(%s)", opname, get_regname(rd), imm, get_regname(rs1));
       break;
     case OP_ECALL:
       sprintf(buf, "ecall");
@@ -235,27 +133,27 @@ string RVInstruction::type_i_str() const
 string RVInstruction::type_s_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, %d(%s)", get_opname(op), get_regname(rs2), imm, get_regname(rs1));
+  sprintf(buf, "%s %s, %d(%s)", opname, get_regname(rs2), imm, get_regname(rs1));
   return {buf};
 }
 
 string RVInstruction::type_sb_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, %s, %d", get_opname(op), get_regname(rs1), get_regname(rs2), imm);
+  sprintf(buf, "%s %s, %s, %d", opname, get_regname(rs1), get_regname(rs2), imm);
   return {buf};
 }
 
 string RVInstruction::type_u_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, %d", get_opname(op), get_regname(rd), imm);
+  sprintf(buf, "%s %s, %d", opname, get_regname(rd), imm);
   return {buf};
 }
 
 string RVInstruction::type_uj_str() const
 {
   char buf[MAX_INST_LENGTH];
-  sprintf(buf, "%s %s, %d", get_opname(op), get_regname(rd), imm);
+  sprintf(buf, "%s %s, %d", opname, get_regname(rd), imm);
   return {buf};
 }

@@ -13,11 +13,22 @@
 
 enum RVInstOp
 {
-  OP_ADD, OP_MUL, OP_SUB, OP_SLL, OP_MULH, OP_SLT, OP_XOR, OP_DIV, OP_SRL,
-  OP_SRA, OP_OR, OP_REM, OP_AND, OP_ADDW, OP_SUBW, OP_MULW, OP_DIVW, OP_REMW,
-  OP_LB, OP_LH, OP_LW, OP_LD, OP_ADDI, OP_SLLI, OP_SLTI, OP_XORI, OP_SRLI, OP_SRAI,
-  OP_ORI, OP_ANDI, OP_ADDIW, OP_JALR, OP_ECALL, OP_SB, OP_SH, OP_SW, OP_SD, OP_BEQ,
-  OP_BNE, OP_BLT, OP_BGE, OP_BLTU, OP_BGEU, OP_AUIPC, OP_LUI, OP_JAL
+  /* R-Type */
+  OP_ADD, OP_MUL, OP_SUB, OP_SLL, OP_MULH, OP_SLT, OP_XOR,
+  OP_DIV, OP_SRL, OP_DIVW, OP_REMW, OP_SRA, OP_OR, OP_REM,
+  OP_AND, OP_ADDW, OP_SUBW, OP_MULW, OP_SLLW, OP_SRLW, OP_SRAW,
+  /* I-Type */
+  OP_LB, OP_LH, OP_LW, OP_LD, OP_LBU, OP_LHU, OP_LWU,
+  OP_ADDI, OP_SLLI, OP_SLTI, OP_XORI, OP_SRLI, OP_SRAI,
+  OP_ORI, OP_ANDI, OP_ADDIW, OP_JALR, OP_ECALL,
+  /* S-Type */
+  OP_SB, OP_SH, OP_SW, OP_SD,
+  /* SB-Type */
+  OP_BEQ, OP_BNE, OP_BLT, OP_BGE, OP_BLTU, OP_BGEU,
+  /* U-Type */
+  OP_AUIPC, OP_LUI,
+  /* UJ-Type */
+  OP_JAL
 };
 
 enum RVInstType
@@ -27,14 +38,15 @@ enum RVInstType
 
 const char *get_opname(RVInstOp op);
 
-typedef struct
+struct RVInstDef
 {
+  const char *opname;
   RVInstOp op;
   RVInstType type;
   unsigned int opcode;
   unsigned int funct3;
   unsigned int funct7;
-} RVInstDef;
+};
 
 extern const vector<RVInstDef> InstTab;
 
@@ -42,7 +54,9 @@ class RVInstruction
 {
 public:
   unsigned int inst;
+  uint64_t addr;
 
+  const char *opname;
   RVInstOp op;
   RVInstType type;
 
@@ -57,7 +71,7 @@ public:
 
   unsigned int get_bits(unsigned int lo, unsigned int hi);
 
-  explicit RVInstruction(unsigned int inst);
+  explicit RVInstruction(unsigned int inst, uint64_t addr);
 
   void decode();
 

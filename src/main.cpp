@@ -4,7 +4,7 @@
 #include "simulator/simulator.hpp"
 
 bool verbose = false;
-bool single_step_mode = true;
+bool single_step_mode = false;
 
 void printUsage()
 {
@@ -41,5 +41,6 @@ int main(int argc, char *argv[])
   /* Read ELF */
   elfPath = argv[optind];
   auto simulator = new Simulator(elfPath);
-  simulator->run_sequential(single_step_mode);
+//  simulator->run_sequential(single_step_mode);
+  simulator->run_all();
 }

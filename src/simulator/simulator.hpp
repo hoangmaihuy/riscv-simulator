@@ -10,6 +10,9 @@
 #include "elfio/elfio.hpp"
 #include "riscv/riscv.hpp"
 
+#define STACK_ADDR (MAX_MEM >> 1)
+#define STACK_SIZE (1 << 16) // 64 KB
+
 class Simulator
 {
 private:
@@ -62,6 +65,7 @@ private:
 
 public:
   void run_sequential(bool single_step_mode);
+  void run_all();
 };
 
 

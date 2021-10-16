@@ -7,6 +7,8 @@
 
 #include "global.hpp"
 
+#define MAX_MEM (1LL << 56)
+
 class VirtualMemoryArea
 {
 public:

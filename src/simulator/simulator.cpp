@@ -26,11 +26,13 @@ void Simulator::load_memory()
 
       memory->insert_vma(memAddr, memSize, flags, data, dataSize);
     }
+  memory->insert_vma(STACK_ADDR, STACK_SIZE + 1, PF_R | PF_W, nullptr, 0);
 }
 
 void Simulator::init_cpu()
 {
   cpu->set_pc(elfReader.get_entry());
+  cpu->set_reg(2, STACK_ADDR + STACK_SIZE); // stack pointer
 }
 
 Simulator::Simulator(char *elfPath)

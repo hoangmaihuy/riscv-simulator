@@ -11,7 +11,9 @@ VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flag
   this->flags = flags;
   this->data = static_cast<char *>(malloc(size));
   memset(this->data, 0, size);
-  memcpy(this->data, (char *) data, data_size);
+  if (data_size && data) {
+    memcpy(this->data, (char *) data, data_size);
+  }
 }
 
 VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size)
@@ -19,7 +21,6 @@ VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size)
   this->start = start;
   this->size = size;
   this->flags = 0;
-  this->data = nullptr;
 }
 
 bool VirtualMemoryArea::operator<(const VirtualMemoryArea &that) const
