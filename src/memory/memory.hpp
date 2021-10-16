@@ -37,9 +37,12 @@ public:
   /* Read up to 8 bytes */
   uint64_t read(uint64_t addr, unsigned int size, bool executable = false);
 
+  void read(uint64_t addr, uint64_t size, char *data);
+
   /* Write up to 8 bytes */
   void write(uint64_t addr, unsigned int size, uint64_t data);
 
+  void write(uint64_t addr, uint64_t size, char *data);
 };
 
 #endif //RISCV_SIMULATOR_MEMORY_HPP

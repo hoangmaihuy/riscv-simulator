@@ -66,6 +66,8 @@ private:
 
   void pcupdate();
 
+  void printregs();
+
   void run_cycle();
 
 public:

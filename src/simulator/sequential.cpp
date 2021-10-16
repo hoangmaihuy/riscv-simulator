@@ -3,6 +3,7 @@
 //
 
 #include "simulator.hpp"
+#include "cpu/cpu.hpp"
 
 void Simulator::fetch()
 {
@@ -12,7 +13,7 @@ void Simulator::fetch()
     free(inst);
   inst = new RVInstruction(instRaw, valP);
   if (verbose)
-    fprintf(stderr, "fetch: %llx:  %x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
+    fprintf(stderr, "\nfetch: %llx:  %x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
 }
 
 void Simulator::decode()
@@ -192,7 +193,6 @@ void Simulator::execute()
       break;
       /* SB-Type instructions */
     case OP_BEQ:
-      fprintf(stderr, "beq: valA = %lld, valB = %lld\n", valA, valB);
       cc = valA == valB;
       valE = valP + valC;
       break;
@@ -247,13 +247,13 @@ void Simulator::memaccess()
       valM = (int64_t) memory->read(valE, 8);
       break;
     case OP_LBU:
-      valM = (int64_t) (uint8_t) memory->read(valE, 1);
+      valM = (uint64_t) (uint8_t) memory->read(valE, 1);
       break;
     case OP_LHU:
-      valM = (int64_t) (uint16_t) memory->read(valE, 2);
+      valM = (uint64_t) (uint16_t) memory->read(valE, 2);
       break;
     case OP_LWU:
-      valM = (int64_t) (uint32_t) memory->read(valE, 4);
+      valM = (uint64_t) (uint32_t) memory->read(valE, 4);
       break;
     case OP_SB:
       memory->write(valE, 1, valB);
@@ -296,6 +296,9 @@ void Simulator::writeback()
         case OP_LH:
         case OP_LW:
         case OP_LD:
+        case OP_LBU:
+        case OP_LHU:
+        case OP_LWU:
           cpu->set_reg(dstE, valM);
           break;
         default:
@@ -339,6 +342,13 @@ void Simulator::pcupdate()
   cpu->set_pc(newPC);
 }
 
+void Simulator::printregs()
+{
+  if (!verbose) return;
+  fprintf(stderr, "Register values: \n");
+  for (int i = 0; i < REGNUM; i++) fprintf(stderr, "  [%s] = 0x%llx\n", get_regname(i), cpu->get_reg(i));
+}
+
 void Simulator::run_cycle()
 {
   cpu->set_reg(0, 0);
@@ -348,6 +358,7 @@ void Simulator::run_cycle()
   memaccess();
   writeback();
   pcupdate();
+  printregs();
 }
 
 void Simulator::run_sequential(bool single_step_mode)
@@ -371,6 +382,6 @@ void Simulator::run_sequential(bool single_step_mode)
 
 void Simulator::run_all()
 {
-  while (cpu->get_pc() != endPC)
+  while (true)
     run_cycle();
 }
