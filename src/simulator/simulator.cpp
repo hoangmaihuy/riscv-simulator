@@ -11,6 +11,28 @@ void Simulator::read_elf()
     fprintf(stderr, "Can't find or process ELF file %s\n", elfPath);
     exit(1);
   }
+  /* Read symbols to find `exit` as terminate instruction */
+  for (auto section: elfReader.sections)
+    if (section->get_type() == SHT_SYMTAB)
+    {
+      const ELFIO::symbol_section_accessor symbols(elfReader, section);
+      std::string name;
+      ELFIO::Elf64_Addr value;
+      ELFIO::Elf_Xword size;
+      unsigned char bind;
+      unsigned char type;
+      ELFIO::Elf_Half section_index;
+      unsigned char other;
+      if (symbols.get_symbol("_exit", value, size, bind, type, section_index, other))
+      {
+        endPC = value;
+      } else
+      {
+        fprintf(stderr, "read_elf: no _exit symbol\n");
+        exit(1);
+      }
+      break;
+    }
 }
 
 void Simulator::load_memory()

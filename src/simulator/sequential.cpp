@@ -361,6 +361,6 @@ void Simulator::run_sequential(bool single_step_mode)
 
 void Simulator::run_all()
 {
-  while (cpu->get_pc())
+  while (cpu->get_pc() != endPC)
     run_cycle();
 }

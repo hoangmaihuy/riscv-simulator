@@ -17,6 +17,8 @@ class Simulator
 {
 private:
   char *elfPath;
+  uint64_t endPC;
+
   ELFIO::elfio elfReader;
   CPU *cpu;
   VirtualMemory *memory;
@@ -65,6 +67,7 @@ private:
 
 public:
   void run_sequential(bool single_step_mode);
+
   void run_all();
 };
 
