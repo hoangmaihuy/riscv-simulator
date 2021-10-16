@@ -28,8 +28,8 @@
 
 # Executables
 *.exe
-*.out
 *.app
+*.riscv
 
 build
 cmake-build-debug
@@ -43,4 +43,8 @@ Makefile
 riscv-simulator
 riscv_simulator.cbp
 test/*.s
+*.asm
 
+*.DS_Store
+Testing
+*.txt

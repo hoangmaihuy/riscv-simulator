@@ -148,13 +148,13 @@ void Simulator::execute()
       valE = valA << (valC & 0x3f);
       break;
     case OP_SRLI:
-      valE = valA >> (valC & 0x3f);
+      valE = (uint64_t)valA >> (valC & 0x3f);
       break;
     case OP_SRAI:
       valE = (int64_t) valA >> (valC & 0x3f);
       break;
     case OP_SLLIW:
-      valE = valA << (valC & 0x1f);
+      valE = (int32_t)valA << (valC & 0x1f);
       break;
     case OP_SLTI:
       valE = (valA < valC) ? 1 : 0;
@@ -163,10 +163,10 @@ void Simulator::execute()
       valE = valA ^ valC;
       break;
     case OP_SRLIW:
-      valE = valA >> (valC & 0x1f);
+      valE = (uint32_t)valA >> (valC & 0x1f);
       break;
     case OP_SRAIW:
-      valE = (int64_t) valA >> (valC & 0x1f);
+      valE = (int32_t) valA >> (valC & 0x1f);
       break;
     case OP_ORI:
       valE = valA | valC;
