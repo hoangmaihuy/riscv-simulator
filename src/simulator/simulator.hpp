@@ -11,7 +11,7 @@
 #include "riscv/riscv.hpp"
 
 #define STACK_ADDR (MAX_MEM >> 1)
-#define STACK_SIZE (1 << 16) // 64 KB
+#define STACK_SIZE (1 << 20)
 
 class Simulator
 {

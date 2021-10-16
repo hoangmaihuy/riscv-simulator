@@ -10,7 +10,7 @@ void VirtualMemory::insert_vma(uint64_t start, uint64_t size, uint8_t flags, con
   // Check area overlap
   for (auto area: areas)
   {
-    assert(start + size < area.start || start >= area.start + area.size);
+    assert(start + size < area.start || start > area.start + area.size);
   }
   areas.insert(VirtualMemoryArea(start, size, flags, data, data_size));
 
@@ -28,7 +28,7 @@ VirtualMemoryArea VirtualMemory::find_vma(uint64_t addr, uint64_t size)
   auto it = areas.upper_bound(target);
   auto prev = it;
   prev--;
-  if (it == areas.begin() || addr >= prev->start + prev->size)
+  if (it == areas.begin() || addr > prev->start + prev->size)
   {
     fprintf(stderr, "find_vma error: addr = 0x%llx, size = %llu\n", addr, size);
     exit(1);
