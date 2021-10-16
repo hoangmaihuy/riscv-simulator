@@ -41,6 +41,7 @@ void Simulator::syscall()
     case SYS_read_char:
       scanf("%c", &ch);
       cpu->set_reg(reg("a0"), ch);
+      break;
     case SYS_write_int:
       x = cpu->get_reg(reg("a0"));
       printf("%d", x);
