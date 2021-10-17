@@ -15,10 +15,9 @@ extern const char *regnames[REGNUM];
 
 const char *get_regname(unsigned int reg);
 
-unsigned int reg(const char* regname);
+unsigned int reg(const char *regname);
 
-class CPU
-{
+class CPU {
 private:
   uint64_t regs[REGNUM]{};
 

@@ -13,8 +13,7 @@
 #define STACK_ADDR (MAX_MEM >> 1)
 #define STACK_SIZE (1 << 20)
 
-class Simulator
-{
+class Simulator {
 private:
   char *elfPath;
   uint64_t endPC;
@@ -71,9 +70,7 @@ private:
   void run_cycle();
 
 public:
-  void run_sequential(bool single_step_mode);
-
-  void run_all();
+  void run(bool debug_mode);
 };
 
 

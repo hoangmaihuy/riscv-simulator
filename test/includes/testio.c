@@ -6,8 +6,7 @@
 
 // Syscall number in /src/simulator/syscall.cpp
 
-int getint()
-{
+int getint() {
   int x;
   asm("li a7, 10;"
       "ecall");
@@ -15,8 +14,7 @@ int getint()
   return x;
 }
 
-long long read_long_long()
-{
+long long read_long_long() {
   long long x;
   asm("li a7, 11;"
       "ecall");
@@ -24,8 +22,7 @@ long long read_long_long()
   return x;
 }
 
-char getch()
-{
+char getch() {
   char x;
   asm("li a7, 12;"
       "ecall");
@@ -33,26 +30,22 @@ char getch()
   return x;
 }
 
-void putint(int x)
-{
+void putint(int x) {
   asm("li a7, 20;"
       "ecall");
 }
 
-void write_long_long(long long x)
-{
+void write_long_long(long long x) {
   asm("li a7, 21;"
       "ecall");
 }
 
-void putch(char ch)
-{
+void putch(char ch) {
   asm("li a7, 22;"
       "ecall");
 }
 
-void write_string(char *buf)
-{
+void write_string(char *buf) {
   asm("li a7, 23;"
       "ecall");
 }

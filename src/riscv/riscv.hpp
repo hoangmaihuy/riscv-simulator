@@ -11,8 +11,7 @@
 #define MAX_INST_LENGTH 50
 #define INST_SIZE 4
 
-enum RVInstOp
-{
+enum RVInstOp {
   /* R-Type */
   OP_ADD, OP_MUL, OP_SUB, OP_SLL, OP_MULH, OP_SLT, OP_XOR,
   OP_DIV, OP_SRL, OP_DIVW, OP_REMW, OP_SRA, OP_OR, OP_REM,
@@ -31,15 +30,13 @@ enum RVInstOp
   OP_JAL
 };
 
-enum RVInstType
-{
+enum RVInstType {
   TYPE_R, TYPE_I, TYPE_S, TYPE_SB, TYPE_U, TYPE_UJ
 };
 
 const char *get_opname(RVInstOp op);
 
-struct RVInstDef
-{
+struct RVInstDef {
   const char *opname;
   RVInstOp op;
   RVInstType type;
@@ -50,8 +47,7 @@ struct RVInstDef
 
 extern const vector<RVInstDef> InstTab;
 
-class RVInstruction
-{
+class RVInstruction {
 public:
   unsigned int inst;
   uint64_t addr;

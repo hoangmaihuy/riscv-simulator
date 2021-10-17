@@ -5,15 +5,12 @@
 #include "riscv.hpp"
 
 /* Search instruction tab */
-void RVInstruction::decode()
-{
-  for (auto &instDef: InstTab)
-  {
+void RVInstruction::decode() {
+  for (auto &instDef: InstTab) {
     bool checkOpCode = opcode == instDef.opcode;
     bool checkFunct3 = (instDef.funct3 == SKIP_FUNCT || instDef.funct3 == funct3);
     bool checkFunct7 = (instDef.funct7 == SKIP_FUNCT || instDef.funct7 == funct7);
-    if (checkOpCode && checkFunct3 && checkFunct7)
-    {
+    if (checkOpCode && checkFunct3 && checkFunct7) {
       op = instDef.op;
       type = instDef.type;
       opname = instDef.opname;
@@ -25,8 +22,7 @@ void RVInstruction::decode()
   exit(1);
 }
 
-RVInstruction::RVInstruction(unsigned int inst, uint64_t addr)
-{
+RVInstruction::RVInstruction(unsigned int inst, uint64_t addr) {
   this->inst = inst;
   this->addr = addr;
   opcode = get_bits(0, 6);
@@ -42,8 +38,7 @@ RVInstruction::RVInstruction(unsigned int inst, uint64_t addr)
 
   decode();
 
-  switch (type)
-  {
+  switch (type) {
     case TYPE_R:
       rd = get_bits(7, 11);
       rs1 = get_bits(15, 19);
@@ -81,15 +76,12 @@ RVInstruction::RVInstruction(unsigned int inst, uint64_t addr)
   }
 }
 
-unsigned int RVInstruction::get_bits(unsigned int lo, unsigned int hi)
-{
+unsigned int RVInstruction::get_bits(unsigned int lo, unsigned int hi) {
   return inst << (31 - hi) >> (31 - hi + lo);
 }
 
-string RVInstruction::to_str()
-{
-  switch (type)
-  {
+string RVInstruction::to_str() {
+  switch (type) {
     case TYPE_R:
       return type_r_str();
     case TYPE_I:
@@ -107,19 +99,16 @@ string RVInstruction::to_str()
   }
 }
 
-string RVInstruction::type_r_str() const
-{
+string RVInstruction::type_r_str() const {
   char buf[MAX_INST_LENGTH];
   sprintf(buf, "%s %s, %s, %s", opname, get_regname(rd), get_regname(rs1),
           get_regname(rs2));
   return {buf};
 }
 
-string RVInstruction::type_i_str() const
-{
+string RVInstruction::type_i_str() const {
   char buf[MAX_INST_LENGTH];
-  switch (op)
-  {
+  switch (op) {
     case OP_LB:
     case OP_LH:
     case OP_LW:
@@ -135,29 +124,25 @@ string RVInstruction::type_i_str() const
   return {buf};
 }
 
-string RVInstruction::type_s_str() const
-{
+string RVInstruction::type_s_str() const {
   char buf[MAX_INST_LENGTH];
   sprintf(buf, "%s %s, %d(%s)", opname, get_regname(rs2), imm, get_regname(rs1));
   return {buf};
 }
 
-string RVInstruction::type_sb_str() const
-{
+string RVInstruction::type_sb_str() const {
   char buf[MAX_INST_LENGTH];
   sprintf(buf, "%s %s, %s, %d", opname, get_regname(rs1), get_regname(rs2), imm);
   return {buf};
 }
 
-string RVInstruction::type_u_str() const
-{
+string RVInstruction::type_u_str() const {
   char buf[MAX_INST_LENGTH];
   sprintf(buf, "%s %s, %d", opname, get_regname(rd), imm);
   return {buf};
 }
 
-string RVInstruction::type_uj_str() const
-{
+string RVInstruction::type_uj_str() const {
   char buf[MAX_INST_LENGTH];
   sprintf(buf, "%s %s, %d", opname, get_regname(rd), imm);
   return {buf};

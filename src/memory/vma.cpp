@@ -4,8 +4,8 @@
 
 #include "memory.hpp"
 
-VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flags, const char *data, uint64_t data_size)
-{
+VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flags, const char *data,
+                                     uint64_t data_size) {
   this->start = start;
   this->size = size;
   this->flags = flags;
@@ -16,15 +16,13 @@ VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flag
   }
 }
 
-VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size)
-{
+VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size) {
   this->start = start;
   this->size = size;
   this->flags = 0;
 }
 
-bool VirtualMemoryArea::operator<(const VirtualMemoryArea &that) const
-{
+bool VirtualMemoryArea::operator<(const VirtualMemoryArea &that) const {
   return start + size <= that.start;
 }
 

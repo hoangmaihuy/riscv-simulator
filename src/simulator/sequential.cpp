@@ -5,8 +5,7 @@
 #include "simulator.hpp"
 #include "cpu/cpu.hpp"
 
-void Simulator::fetch()
-{
+void Simulator::fetch() {
   valP = cpu->get_pc();
   auto instRaw = (uint32_t) memory->read(valP, INST_SIZE, true);
   if (inst)
@@ -16,10 +15,8 @@ void Simulator::fetch()
     fprintf(stderr, "\nfetch: %llx:  %x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
 }
 
-void Simulator::decode()
-{
-  switch (inst->type)
-  {
+void Simulator::decode() {
+  switch (inst->type) {
     case TYPE_R:
       valA = cpu->get_reg(inst->rs1);
       valB = cpu->get_reg(inst->rs2);
@@ -27,14 +24,12 @@ void Simulator::decode()
       dstE = inst->rd;
       break;
     case TYPE_I:
-      if (inst->op != OP_ECALL)
-      {
+      if (inst->op != OP_ECALL) {
         valA = cpu->get_reg(inst->rs1);
         valB = 0;
         valC = inst->imm;
         dstE = inst->rd;
-      } else
-      {
+      } else {
         valA = valB = valC = dstE = 0;
       }
       break;
@@ -63,10 +58,8 @@ void Simulator::decode()
   }
 }
 
-void Simulator::execute()
-{
-  switch (inst->op)
-  {
+void Simulator::execute() {
+  switch (inst->op) {
     /* R-Type instruction */
     case OP_ADD:
       valE = valA + valB;
@@ -148,13 +141,13 @@ void Simulator::execute()
       valE = valA << (valC & 0x3f);
       break;
     case OP_SRLI:
-      valE = (uint64_t)valA >> (valC & 0x3f);
+      valE = (uint64_t) valA >> (valC & 0x3f);
       break;
     case OP_SRAI:
       valE = (int64_t) valA >> (valC & 0x3f);
       break;
     case OP_SLLIW:
-      valE = (int32_t)valA << (valC & 0x1f);
+      valE = (int32_t) valA << (valC & 0x1f);
       break;
     case OP_SLTI:
       valE = (valA < valC) ? 1 : 0;
@@ -163,7 +156,7 @@ void Simulator::execute()
       valE = valA ^ valC;
       break;
     case OP_SRLIW:
-      valE = (uint32_t)valA >> (valC & 0x1f);
+      valE = (uint32_t) valA >> (valC & 0x1f);
       break;
     case OP_SRAIW:
       valE = (int32_t) valA >> (valC & 0x1f);
@@ -230,10 +223,8 @@ void Simulator::execute()
   }
 }
 
-void Simulator::memaccess()
-{
-  switch (inst->op)
-  {
+void Simulator::memaccess() {
+  switch (inst->op) {
     case OP_LB:
       valM = (int64_t) (int8_t) (uint8_t) memory->read(valE, 1);
       break;
@@ -276,17 +267,14 @@ void Simulator::memaccess()
   }
 }
 
-void Simulator::writeback()
-{
-  switch (inst->type)
-  {
+void Simulator::writeback() {
+  switch (inst->type) {
     case TYPE_R:
     case TYPE_U:
       cpu->set_reg(dstE, valE);
       break;
     case TYPE_I:
-      switch (inst->op)
-      {
+      switch (inst->op) {
         case OP_JALR:
           cpu->set_reg(dstE, valP + INST_SIZE);
           break;
@@ -313,19 +301,16 @@ void Simulator::writeback()
   }
 }
 
-void Simulator::pcupdate()
-{
+void Simulator::pcupdate() {
   uint64_t newPC = 0;
-  switch (inst->type)
-  {
+  switch (inst->type) {
     case TYPE_R:
     case TYPE_U:
     case TYPE_S:
       newPC = valP + INST_SIZE;
       break;
     case TYPE_I:
-      switch (inst->op)
-      {
+      switch (inst->op) {
         case OP_JALR:
           newPC = valE;
           break;
@@ -342,15 +327,13 @@ void Simulator::pcupdate()
   cpu->set_pc(newPC);
 }
 
-void Simulator::printregs()
-{
+void Simulator::printregs() {
   if (!verbose) return;
   fprintf(stderr, "Register values: \n");
   for (int i = 0; i < REGNUM; i++) fprintf(stderr, "  [%s] = 0x%llx\n", get_regname(i), cpu->get_reg(i));
 }
 
-void Simulator::run_cycle()
-{
+void Simulator::run_cycle() {
   cpu->set_reg(0, 0);
   fetch();
   decode();
@@ -361,27 +344,18 @@ void Simulator::run_cycle()
   printregs();
 }
 
-void Simulator::run_sequential(bool single_step_mode)
-{
+void Simulator::run(bool debug_mode) {
   string cmd;
-  while (single_step_mode)
-  {
-    cin >> cmd;
-    if (cmd == "n")
+  while (true) {
+    if (debug_mode) {
+      cin >> cmd;
+    } else {
+      cmd = "r";
+    }
+    if (cmd == "r") {
+      while (true) run_cycle();
+    } else if (cmd == "n") {
       run_cycle();
-    else if (cmd == "q")
-      return;
-    else
-    {
-      fprintf(stderr, "Unknown command: %s\n", cmd.c_str());
-      exit(1);
     }
   }
-
-}
-
-void Simulator::run_all()
-{
-  while (true)
-    run_cycle();
 }

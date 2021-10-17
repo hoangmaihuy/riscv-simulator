@@ -9,8 +9,7 @@
 
 #define MAX_MEM (1LL << 56)
 
-class VirtualMemoryArea
-{
+class VirtualMemoryArea {
 public:
   uint64_t start;
   uint64_t size;
@@ -24,8 +23,7 @@ public:
   bool operator<(VirtualMemoryArea const &that) const;
 };
 
-class VirtualMemory
-{
+class VirtualMemory {
 private:
   set<VirtualMemoryArea> areas;
 

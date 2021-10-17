@@ -26,5 +26,4 @@ void putch(char ch);
 void write_string(char *buf);
 
 
-
 #endif //RISCV_SIMULATOR_TESTIO_H

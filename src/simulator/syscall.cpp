@@ -15,16 +15,14 @@
 #define SYS_write_string 23
 #define SYS_exit 93
 
-void Simulator::syscall()
-{
+void Simulator::syscall() {
   auto sysnum = cpu->get_reg(reg("a7"));
   int x;
   long long y;
   char ch;
   uint64_t addr;
 
-  switch (sysnum)
-  {
+  switch (sysnum) {
     case SYS_exit:
       exit_code = cpu->get_reg(reg("a0"));
       if (verbose)
@@ -56,8 +54,7 @@ void Simulator::syscall()
       break;
     case SYS_write_string:
       addr = cpu->get_reg(reg("a0"));
-      while (true)
-      {
+      while (true) {
         ch = (char) memory->read(addr, 1);
         if (!ch) break;
         printf("%c", ch);

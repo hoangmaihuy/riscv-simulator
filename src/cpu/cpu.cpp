@@ -11,47 +11,38 @@ const char *regnames[REGNUM] = {
     "t5", "t6"
 };
 
-CPU::CPU()
-{
+CPU::CPU() {
   for (uint64_t &reg: regs)
     reg = 0;
   pc = 0;
 }
 
-uint64_t CPU::get_pc() const
-{
+uint64_t CPU::get_pc() const {
   return pc;
 }
 
-void CPU::set_pc(unsigned int value)
-{
+void CPU::set_pc(unsigned int value) {
   pc = value;
 }
 
-uint64_t CPU::get_reg(unsigned int reg)
-{
+uint64_t CPU::get_reg(unsigned int reg) {
   assert(reg < REGNUM);
   return regs[reg];
 }
 
-void CPU::set_reg(unsigned int reg, uint64_t value)
-{
+void CPU::set_reg(unsigned int reg, uint64_t value) {
   assert(reg < REGNUM);
   regs[reg] = value;
 }
 
-const char *get_regname(unsigned int reg)
-{
+const char *get_regname(unsigned int reg) {
   assert(reg < REGNUM);
   return regnames[reg];
 }
 
-unsigned int reg(const char *regname)
-{
-  for (unsigned int i = 0; i < REGNUM; i++)
-  {
-    if (strcmp(regname, regnames[i]) == 0)
-    {
+unsigned int reg(const char *regname) {
+  for (unsigned int i = 0; i < REGNUM; i++) {
+    if (strcmp(regname, regnames[i]) == 0) {
       return i;
     }
   }
