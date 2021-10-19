@@ -327,12 +327,6 @@ void Simulator::pcupdate() {
   cpu->set_pc(newPC);
 }
 
-void Simulator::printregs() {
-  if (!verbose) return;
-  fprintf(stderr, "Register values: \n");
-  for (int i = 0; i < REGNUM; i++) fprintf(stderr, "  [%s] = 0x%llx\n", get_regname(i), cpu->get_reg(i));
-}
-
 void Simulator::run_cycle() {
   cpu->set_reg(0, 0);
   fetch();
@@ -341,21 +335,4 @@ void Simulator::run_cycle() {
   memaccess();
   writeback();
   pcupdate();
-  printregs();
-}
-
-void Simulator::run(bool debug_mode) {
-  string cmd;
-  while (true) {
-    if (debug_mode) {
-      cin >> cmd;
-    } else {
-      cmd = "r";
-    }
-    if (cmd == "r") {
-      while (true) run_cycle();
-    } else if (cmd == "n") {
-      run_cycle();
-    }
-  }
 }

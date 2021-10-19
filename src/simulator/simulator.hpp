@@ -16,8 +16,9 @@
 class Simulator {
 private:
   char *elfPath;
-  uint64_t endPC;
   int exit_code;
+  map<string, uint64_t> symbols;
+  set<uint64_t> breakpoints;
 
   ELFIO::elfio elfReader;
   CPU *cpu;
@@ -65,9 +66,13 @@ private:
 
   void pcupdate();
 
-  void printregs();
-
   void run_cycle();
+
+  bool is_breakpoint(uint64_t addr);
+
+  void handle_cmd(const string &cmd);
+
+  uint64_t get_symbol(const string &sym);
 
 public:
   void run(bool debug_mode);

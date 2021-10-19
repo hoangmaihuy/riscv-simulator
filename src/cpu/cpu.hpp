@@ -34,6 +34,8 @@ public:
   uint64_t get_reg(unsigned int reg);
 
   void set_reg(unsigned int reg, uint64_t value);
+
+  void print();
 };
 
 

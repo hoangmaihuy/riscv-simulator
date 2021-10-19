@@ -49,3 +49,10 @@ unsigned int reg(const char *regname) {
   fprintf(stderr, "Unknown register: %s\n", regname);
   exit(1);
 }
+
+void CPU::print() {
+  fprintf(stderr, "Register values: \n");
+  for (int i = 0; i < REGNUM; i++) {
+    fprintf(stderr, "  reg[%s] = 0x%llx\n", get_regname(i), get_reg(i));
+  }
+}
