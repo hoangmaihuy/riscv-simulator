@@ -43,6 +43,7 @@ Makefile
 riscv-simulator
 riscv_simulator.cbp
 test/*.s
+test/tmp_exec
 *.asm
 
 *.DS_Store
