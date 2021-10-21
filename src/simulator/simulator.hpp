@@ -9,6 +9,7 @@
 #include "cpu/cpu.hpp"
 #include "elfio/elfio.hpp"
 #include "riscv/riscv.hpp"
+#include "simulator/arch/single.hpp"
 
 #define STACK_ADDR (MAX_MEM >> 1)
 #define STACK_SIZE (1 << 20)
@@ -21,27 +22,14 @@ private:
   set<uint64_t> breakpoints;
 
   ELFIO::elfio elfReader;
+
+  BaseArch *arch;
+
+public:
+
   CPU *cpu;
   VirtualMemory *memory;
 
-  /* Fetch result */
-  RVInstruction *inst;
-  uint64_t valP; // next PC
-
-  /* Decode result */
-  uint64_t dstE;
-  int64_t valA; // reg[rs1]
-  int64_t valB; // reg[rs2]
-  int64_t valC; // imm
-
-  /* Execute result */
-  int64_t valE;
-  bool cc;
-
-  /* Memory result */
-  int64_t valM;
-
-public:
   Simulator(char *elfPath);
 
   void read_elf();
@@ -53,20 +41,6 @@ public:
   void syscall();
 
 private:
-  /* Sequential execution */
-  void fetch();
-
-  void decode();
-
-  void execute();
-
-  void memaccess();
-
-  void writeback();
-
-  void pcupdate();
-
-  void run_cycle();
 
   bool is_breakpoint(uint64_t addr);
 

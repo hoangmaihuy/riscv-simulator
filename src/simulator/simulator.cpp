@@ -52,6 +52,7 @@ Simulator::Simulator(char *elfPath) {
   this->elfPath = elfPath;
   memory = new VirtualMemory();
   cpu = new CPU();
+  arch = new SingleCycleArch(this);
 
   read_elf();
   load_memory();
@@ -74,12 +75,12 @@ void Simulator::handle_cmd(const string &cmd) {
   uint64_t addr;
   if (cmd == "r") { // run till end
     while (true)
-      run_cycle();
+      arch->run_cycle();
   } else if (cmd == "c") { // continue run till breakpoint
     while (!is_breakpoint(cpu->get_pc()))
-      run_cycle();
+      arch->run_cycle();
   } else if (cmd == "n") { // next cycle
-    run_cycle();
+    arch->run_cycle();
   } else if (cmd == "b") { // set current instruction as breakpoint
     breakpoints.insert(cpu->get_pc());
   } else if (cmd == "bs") { // set symbol as breakpoint

@@ -2,12 +2,43 @@
 // Created by Mai Hoàng on 14/10/2021.
 //
 
-#include "simulator.hpp"
+#include "simulator/arch/single.hpp"
+#include "simulator/simulator.hpp"
 #include "cpu/cpu.hpp"
 
-void Simulator::fetch() {
-  valP = cpu->get_pc();
-  auto instRaw = (uint32_t) memory->read(valP, INST_SIZE, true);
+SingleCycleArch::SingleCycleArch(Simulator *sim) : BaseArch(sim) {
+  this->inst = nullptr;
+}
+
+void SingleCycleArch::fetch() {
+  if (inst) {
+    uint64_t newPC = 0;
+    switch (inst->type) {
+      case TYPE_R:
+      case TYPE_U:
+      case TYPE_S:
+        newPC = valP + INST_SIZE;
+        break;
+      case TYPE_I:
+        switch (inst->op) {
+          case OP_JALR:
+            newPC = valE;
+            break;
+          default:
+            newPC = valP + INST_SIZE;
+        }
+        break;
+      case TYPE_SB:
+        newPC = (cc ? valE : (valP + INST_SIZE));
+        break;
+      case TYPE_UJ:
+        newPC = valE;
+    }
+    sim->cpu->set_pc(newPC);
+  }
+
+  valP = sim->cpu->get_pc();
+  auto instRaw = (uint32_t) sim->memory->read(valP, INST_SIZE, true);
   if (inst)
     free(inst);
   inst = new RVInstruction(instRaw, valP);
@@ -15,33 +46,36 @@ void Simulator::fetch() {
     fprintf(stderr, "\nfetch: %llx:  %x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
 }
 
-void Simulator::decode() {
+void SingleCycleArch::decode() {
   switch (inst->type) {
     case TYPE_R:
-      valA = cpu->get_reg(inst->rs1);
-      valB = cpu->get_reg(inst->rs2);
+      valA = sim->cpu->get_reg(inst->rs1);
+      valB = sim->cpu->get_reg(inst->rs2);
       valC = 0;
       dstE = inst->rd;
+      dstM = 0;
       break;
     case TYPE_I:
       if (inst->op != OP_ECALL) {
-        valA = cpu->get_reg(inst->rs1);
+        valA = sim->cpu->get_reg(inst->rs1);
         valB = 0;
         valC = inst->imm;
         dstE = inst->rd;
+        dstM = inst->rd;
       } else {
         valA = valB = valC = dstE = 0;
       }
       break;
     case TYPE_S:
-      valA = cpu->get_reg(inst->rs1);
-      valB = cpu->get_reg(inst->rs2);
+      valA = sim->cpu->get_reg(inst->rs1);
+      valB = sim->cpu->get_reg(inst->rs2);
       valC = inst->imm;
       dstE = 0;
+      dstM = 0;
       break;
     case TYPE_SB:
-      valA = cpu->get_reg(inst->rs1);
-      valB = cpu->get_reg(inst->rs2);
+      valA = sim->cpu->get_reg(inst->rs1);
+      valB = sim->cpu->get_reg(inst->rs2);
       valC = inst->imm;
       dstE = 0;
       break;
@@ -58,7 +92,7 @@ void Simulator::decode() {
   }
 }
 
-void Simulator::execute() {
+void SingleCycleArch::execute() {
   switch (inst->op) {
     /* R-Type instruction */
     case OP_ADD:
@@ -175,7 +209,7 @@ void Simulator::execute() {
       break;
     case OP_ECALL:
       valE = 0;
-      syscall();
+      sim->syscall();
       break;
       /* S-Type instructions */
     case OP_SB:
@@ -223,43 +257,43 @@ void Simulator::execute() {
   }
 }
 
-void Simulator::memaccess() {
+void SingleCycleArch::memory() {
   switch (inst->op) {
     case OP_LB:
-      valM = (int64_t) (int8_t) (uint8_t) memory->read(valE, 1);
+      valM = (int64_t) (int8_t) (uint8_t) sim->memory->read(valE, 1);
       break;
     case OP_LH:
-      valM = (int64_t) (int16_t) (uint16_t) memory->read(valE, 2);
+      valM = (int64_t) (int16_t) (uint16_t) sim->memory->read(valE, 2);
       break;
     case OP_LW:
-      valM = (int64_t) (int32_t) (uint32_t) memory->read(valE, 4);
+      valM = (int64_t) (int32_t) (uint32_t) sim->memory->read(valE, 4);
       break;
     case OP_LD:
-      valM = (int64_t) memory->read(valE, 8);
+      valM = (int64_t) sim->memory->read(valE, 8);
       break;
     case OP_LBU:
-      valM = (uint64_t) (uint8_t) memory->read(valE, 1);
+      valM = (uint64_t) (uint8_t) sim->memory->read(valE, 1);
       break;
     case OP_LHU:
-      valM = (uint64_t) (uint16_t) memory->read(valE, 2);
+      valM = (uint64_t) (uint16_t) sim->memory->read(valE, 2);
       break;
     case OP_LWU:
-      valM = (uint64_t) (uint32_t) memory->read(valE, 4);
+      valM = (uint64_t) (uint32_t) sim->memory->read(valE, 4);
       break;
     case OP_SB:
-      memory->write(valE, 1, valB);
+      sim->memory->write(valE, 1, valB);
       valM = 0;
       break;
     case OP_SH:
-      memory->write(valE, 2, valB);
+      sim->memory->write(valE, 2, valB);
       valM = 0;
       break;
     case OP_SW:
-      memory->write(valE, 4, valB);
+      sim->memory->write(valE, 4, valB);
       valM = 0;
       break;
     case OP_SD:
-      memory->write(valE, 8, valB);
+      sim->memory->write(valE, 8, valB);
       valM = 0;
       break;
     default:
@@ -267,16 +301,16 @@ void Simulator::memaccess() {
   }
 }
 
-void Simulator::writeback() {
+void SingleCycleArch::writeback() {
   switch (inst->type) {
     case TYPE_R:
     case TYPE_U:
-      cpu->set_reg(dstE, valE);
+      sim->cpu->set_reg(dstE, valE);
       break;
     case TYPE_I:
       switch (inst->op) {
         case OP_JALR:
-          cpu->set_reg(dstE, valP + INST_SIZE);
+          sim->cpu->set_reg(dstE, valP + INST_SIZE);
           break;
         case OP_ECALL:
           break;
@@ -287,52 +321,25 @@ void Simulator::writeback() {
         case OP_LBU:
         case OP_LHU:
         case OP_LWU:
-          cpu->set_reg(dstE, valM);
+          sim->cpu->set_reg(dstM, valM);
           break;
         default:
-          cpu->set_reg(dstE, valE);
+          sim->cpu->set_reg(dstE, valE);
       }
       break;
     case TYPE_UJ:
-      cpu->set_reg(dstE, valP + INST_SIZE);
+      sim->cpu->set_reg(dstE, valP + INST_SIZE);
       break;
     default:
       break;
   }
 }
 
-void Simulator::pcupdate() {
-  uint64_t newPC = 0;
-  switch (inst->type) {
-    case TYPE_R:
-    case TYPE_U:
-    case TYPE_S:
-      newPC = valP + INST_SIZE;
-      break;
-    case TYPE_I:
-      switch (inst->op) {
-        case OP_JALR:
-          newPC = valE;
-          break;
-        default:
-          newPC = valP + INST_SIZE;
-      }
-      break;
-    case TYPE_SB:
-      newPC = (cc ? valE : (valP + INST_SIZE));
-      break;
-    case TYPE_UJ:
-      newPC = valE;
-  }
-  cpu->set_pc(newPC);
-}
-
-void Simulator::run_cycle() {
-  cpu->set_reg(0, 0);
+void SingleCycleArch::run_cycle() {
+  sim->cpu->set_reg(0, 0);
   fetch();
   decode();
   execute();
-  memaccess();
+  memory();
   writeback();
-  pcupdate();
 }

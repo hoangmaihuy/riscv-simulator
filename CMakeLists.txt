@@ -7,6 +7,6 @@ include_directories(src)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/riscv/*.cpp" "src/memory/*.cpp" "src/cpu/*.cpp" "src/simulator/*.cpp")
 
-set(SOURCES ${SOURCES} test/includes/genio.c test/includes/genio.h)
+set(SOURCES ${SOURCES} test/includes/genio.c test/includes/genio.h src/simulator/arch/single.hpp src/simulator/arch/base.hpp src/simulator/arch/base.cpp)
 
 add_executable(riscv-simulator ${SOURCES})
