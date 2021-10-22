@@ -5,6 +5,7 @@
 
 bool verbose = false;
 bool debug_mode = false;
+SimulatorMode sim_mode = SIM_MODE_SINGLE;
 
 void print_usage() {
   printf("Usage: ./riscv-simulator [options] <elf-path>\n");
@@ -12,6 +13,9 @@ void print_usage() {
   printf("  -h              Print this message\n");
   printf("  -v              Verbose mode\n");
   printf("  -d              Debug mode\n");
+  printf("  -s              Single-cycle mode\n");
+  printf("  -m              Multi-cycle mode\n");
+  printf("  -p              Pipeline mode\n");
   printf("Debug: \n");
   printf("  r               Run till end\n");
   printf("  n               Next cycle\n");
@@ -30,14 +34,23 @@ void print_usage() {
 int main(int argc, char *argv[]) {
 
   int opt;
-  char *elfPath;
+  char *elf_path;
 
   /* Parse arguments */
-  while ((opt = getopt(argc, argv, ":vhd")) != -1) {
+  while ((opt = getopt(argc, argv, ":vhdmsp")) != -1) {
     switch (opt) {
       case 'h':
         print_usage();
         return 0;
+      case 's':
+        sim_mode = SIM_MODE_SINGLE;
+        break;
+      case 'm':
+        sim_mode = SIM_MODE_MULTI;
+        break;
+      case 'p':
+        sim_mode = SIM_MODE_PIPE;
+        break;
       case 'v':
         verbose = true;
         break;
@@ -53,8 +66,8 @@ int main(int argc, char *argv[]) {
   }
 
   /* Read ELF */
-  elfPath = argv[optind];
-  auto simulator = new Simulator(elfPath);
+  elf_path = argv[optind];
+  auto simulator = new Simulator(elf_path, sim_mode);
   simulator->run(debug_mode);
   return 0;
 }

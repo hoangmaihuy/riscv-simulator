@@ -11,6 +11,11 @@ SingleCycleArch::SingleCycleArch(Simulator *sim) : BaseArch(sim) {
 }
 
 void SingleCycleArch::fetch() {
+  inst_cnt += 1;
+  if (last_inst)
+    free(last_inst);
+  last_inst = inst;
+
   if (inst) {
     uint64_t newPC = 0;
     switch (inst->type) {
@@ -39,8 +44,6 @@ void SingleCycleArch::fetch() {
 
   valP = sim->cpu->get_pc();
   auto instRaw = (uint32_t) sim->memory->read(valP, INST_SIZE, true);
-  if (inst)
-    free(inst);
   inst = new RVInstruction(instRaw, valP);
   if (verbose)
     fprintf(stderr, "\nfetch: %llx:  %x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
@@ -335,6 +338,10 @@ void SingleCycleArch::writeback() {
   }
 }
 
+void SingleCycleArch::inc_cycle() {
+  cycle_cnt += 1;
+}
+
 void SingleCycleArch::run_cycle() {
   sim->cpu->set_reg(0, 0);
   fetch();
@@ -342,4 +349,5 @@ void SingleCycleArch::run_cycle() {
   execute();
   memory();
   writeback();
+  inc_cycle();
 }

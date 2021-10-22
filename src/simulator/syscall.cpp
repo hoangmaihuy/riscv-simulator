@@ -25,9 +25,10 @@ void Simulator::syscall() {
   switch (sysnum) {
     case SYS_exit:
       exit_code = cpu->get_reg(reg("a0"));
+      exited = true;
       if (verbose)
         fprintf(stderr, "\nProgram terminated with exit code %d\n", exit_code);
-      exit(exit_code);
+      break;
     case SYS_read_int:
       scanf("%d", &x);
       cpu->set_reg(reg("a0"), x);

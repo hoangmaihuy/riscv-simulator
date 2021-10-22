@@ -13,8 +13,8 @@ import sys
 
 # directories that storing test cases
 dirs = [
-    './functional',
-    './basic',
+    # './functional',
+    # './basic',
     './class',
 ]
 gcc_compiler = 'gcc'
@@ -39,7 +39,7 @@ def run_case(c_file, in_file, out_file):
     exec_file = f"{c_file[:-2]}.riscv"
     asm_file = f"{c_file[:-2]}.asm"
     # compile C source to executable
-    compile_cmd = riscv_compiler.split(' ') + ['-w', '-march=rv64i', c_file, '-o', exec_file, testio]
+    compile_cmd = riscv_compiler.split(' ') + ['-w', '-march=rv64g', c_file, '-o', exec_file, testio]
     subprocess.run(compile_cmd, stdout=subprocess.PIPE)
 
     # objdump to get assembly file for debugging
@@ -50,7 +50,7 @@ def run_case(c_file, in_file, out_file):
         f.write(objdump_out)
 
     # run compiled file
-    run_cmd = [riscv_simulator, exec_file]
+    run_cmd = [riscv_simulator, "-m", exec_file]
     if in_file:
         with open(in_file) as f:
             inputs = f.read().encode('utf-8')

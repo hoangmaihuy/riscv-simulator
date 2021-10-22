@@ -10,13 +10,21 @@
 #include "elfio/elfio.hpp"
 #include "riscv/riscv.hpp"
 #include "simulator/arch/single.hpp"
+#include "simulator/arch/multi.hpp"
 
 #define STACK_ADDR (MAX_MEM >> 1)
 #define STACK_SIZE (1 << 20)
 
+enum SimulatorMode {
+  SIM_MODE_SINGLE,
+  SIM_MODE_MULTI,
+  SIM_MODE_PIPE
+};
+
 class Simulator {
 private:
-  char *elfPath;
+  char *elf_path;
+  bool exited;
   int exit_code;
   map<string, uint64_t> symbols;
   set<uint64_t> breakpoints;
@@ -30,7 +38,7 @@ public:
   CPU *cpu;
   VirtualMemory *memory;
 
-  Simulator(char *elfPath);
+  Simulator(char *elf_path, SimulatorMode sim_mode);
 
   void read_elf();
 

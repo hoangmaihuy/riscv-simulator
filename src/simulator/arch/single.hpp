@@ -10,8 +10,10 @@
 
 
 class SingleCycleArch : public BaseArch {
-private:
+protected:
+
   /* Fetch result */
+  RVInstruction *last_inst;
   RVInstruction *inst;
   uint64_t valP; // next PC
 
@@ -29,15 +31,17 @@ private:
   /* Memory result */
   int64_t valM;
 
-  void fetch();
+  virtual void fetch();
 
-  void decode();
+  virtual void decode();
 
-  void execute();
+  virtual void execute();
 
-  void memory();
+  virtual void memory();
 
-  void writeback();
+  virtual void writeback();
+
+  virtual void inc_cycle();
 
 public:
   SingleCycleArch(Simulator *sim);

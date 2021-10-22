@@ -6,8 +6,8 @@
 #include "cpu/cpu.hpp"
 
 void Simulator::read_elf() {
-  if (!elfReader.load(elfPath)) {
-    fprintf(stderr, "Can't find or process ELF file %s\n", elfPath);
+  if (!elfReader.load(elf_path)) {
+    fprintf(stderr, "Can't find or process ELF file %s\n", elf_path);
     exit(1);
   }
   /* Read symbols to find `exit` as terminate instruction */
@@ -48,11 +48,25 @@ void Simulator::init_cpu() {
   cpu->set_reg(reg("sp"), STACK_ADDR + STACK_SIZE);
 }
 
-Simulator::Simulator(char *elfPath) {
-  this->elfPath = elfPath;
+Simulator::Simulator(char *elf_path, SimulatorMode sim_mode) {
+  this->exited = false;
+  this->elf_path = elf_path;
   memory = new VirtualMemory();
   cpu = new CPU();
-  arch = new SingleCycleArch(this);
+  switch (sim_mode) {
+    case SIM_MODE_SINGLE:
+      arch = new SingleCycleArch(this);
+      break;
+    case SIM_MODE_MULTI:
+      arch = new MultiCycleArch(this);
+      break;
+//    case SIM_MODE_PIPE:
+//      arch = new PipelineArch(this);
+//      break;
+    default:
+      fprintf(stderr, "Unknown simulator mode: %d\n", sim_mode);
+      break;
+  }
 
   read_elf();
   load_memory();
@@ -61,12 +75,14 @@ Simulator::Simulator(char *elfPath) {
 
 void Simulator::run(bool debug_mode) {
   string cmd = "r";
-  while (true) {
+  while (!exited) {
     if (debug_mode) {
       cin >> cmd;
     }
     handle_cmd(cmd);
   }
+  arch->print_stats();
+  exit(exit_code);
 }
 
 void Simulator::handle_cmd(const string &cmd) {
@@ -74,10 +90,10 @@ void Simulator::handle_cmd(const string &cmd) {
   char regname[5];
   uint64_t addr;
   if (cmd == "r") { // run till end
-    while (true)
+    while (!exited)
       arch->run_cycle();
   } else if (cmd == "c") { // continue run till breakpoint
-    while (!is_breakpoint(cpu->get_pc()))
+    while (!exited && !is_breakpoint(cpu->get_pc()))
       arch->run_cycle();
   } else if (cmd == "n") { // next cycle
     arch->run_cycle();
