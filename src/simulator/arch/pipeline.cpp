@@ -302,6 +302,9 @@ void PipelineArch::execute() {
       break;
     case OP_ECALL:
       valE = sim->syscall(valB, valA);
+      if (valB >= 10 && valB < 20) {
+        dstE = reg("a0");
+      }
       break;
       /* S-Type instructions */
     case OP_SB:
@@ -350,6 +353,9 @@ void PipelineArch::execute() {
 
   // mis-predicted branch
   if (inst->is_branch() && cond) {
+    if (verbose) {
+      fprintf(stderr, "execute: mis-predicted branch, alterPC = 0x%.08llx\n", alterPC);
+    }
     sim->cpu->set_pc(alterPC);
     nextF.bubbled = true;
     nextD.bubbled = true;
@@ -562,6 +568,7 @@ void PipelineArch::writeback() {
           valW = valP + INST_SIZE;
           break;
         case OP_ECALL:
+          valW = valE;
           break;
         case OP_LB:
         case OP_LH:
@@ -606,8 +613,8 @@ void PipelineArch::writeback() {
 
 
   if (verbose) {
-    fprintf(stderr, "writeb\t: %.08llx:  %.8x    %s\tvalE = %lld, valM = %lld\n", inst->addr, inst->inst,
-            inst->to_str().c_str(), valE, valM);
+    fprintf(stderr, "writeb\t: %.08llx:  %.8x    %s\tdstE = %d, valE = %lld, dstM = %d, valM = %lld\n", inst->addr, inst->inst,
+            inst->to_str().c_str(), dstE, valE, dstM, valM);
   }
 }
 

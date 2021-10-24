@@ -13,14 +13,15 @@ import sys
 
 # directories that storing test cases
 dirs = [
-    # './functional',
-    # './basic',
+    './functional',
+    './basic',
     './class',
 ]
 gcc_compiler = 'gcc'
 riscv_compiler = 'riscv64-unknown-elf-gcc'
 riscv_objdump = 'riscv64-unknown-elf-objdump'
 riscv_simulator = '../riscv-simulator'
+simulator_mode = '-p'
 testio = './includes/testio.c'
 genio = './includes/genio.c'
 
@@ -50,7 +51,7 @@ def run_case(c_file, in_file, out_file):
         f.write(objdump_out)
 
     # run compiled file
-    run_cmd = [riscv_simulator, "-p", exec_file]
+    run_cmd = [riscv_simulator, simulator_mode, exec_file]
     if in_file:
         with open(in_file) as f:
             inputs = f.read().encode('utf-8')
