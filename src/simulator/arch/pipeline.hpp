@@ -43,29 +43,19 @@ struct MReg {
   bool cond;
 };
 
-struct WReg {
-  bool bubbled;
-  int stalled;
-  RVInstOp op;
-  RVInstType type;
-  int64_t valP, valM, valE;
-  uint32_t dstE, dstM;
-};
-
 class PipelineArch : public BaseArch {
 protected:
-  unsigned int data_hazard_cnt = 0;
-  unsigned int control_hazard_cnt = 0;
 
   uint64_t predPC, alterPC;
 
   uint32_t fwE, fwM1, fwM2; // forward destination register
 
+  unsigned int cycle_cost;
+
   FReg curF, nextF;
   DReg curD, nextD;
   EReg curE, nextE;
   MReg curM, nextM;
-  WReg curW, nextW;
 
   virtual void fetch();
 

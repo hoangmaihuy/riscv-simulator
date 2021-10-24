@@ -14,14 +14,11 @@ PipelineArch::PipelineArch(Simulator *sim) : BaseArch(sim) {
   memset(&nextE, 0, sizeof(nextE));
   memset(&curM, 0, sizeof(curM));
   memset(&nextM, 0, sizeof(nextM));
-  memset(&curW, 0, sizeof(curW));
-  memset(&nextW, 0, sizeof(nextW));
 
   curF.bubbled = true;
   curD.bubbled = true;
   curE.bubbled = true;
   curM.bubbled = true;
-  curW.bubbled = true;
 }
 
 void PipelineArch::fetch() {
@@ -153,6 +150,8 @@ void PipelineArch::decode() {
 
 void PipelineArch::execute() {
 
+  cycle_cost = 1;
+
   if (curD.stalled) {
     nextE.bubbled = true;
     if (verbose) {
@@ -172,6 +171,7 @@ void PipelineArch::execute() {
   inst_cnt += 1;
 
   auto inst = curD.inst;
+  auto last_inst = curE.inst;
   int64_t valA = curD.valA;
   int64_t valB = curD.valB;
   int64_t valC = curD.valC;
@@ -193,6 +193,7 @@ void PipelineArch::execute() {
       break;
     case OP_MUL:
       valE = valA * valB;
+      cycle_cost = MUL_CYCLE_CNT;
       break;
     case OP_SUB:
       valE = valA - valB;
@@ -202,6 +203,7 @@ void PipelineArch::execute() {
       break;
     case OP_MULH:
       valE = ((__int128_t) valA * valB) >> 64;
+      cycle_cost = MUL_CYCLE_CNT;
       break;
     case OP_SLT:
       valE = (valA < valB) ? 1 : 0;
@@ -211,6 +213,10 @@ void PipelineArch::execute() {
       break;
     case OP_DIV:
       valE = valA / valB;
+      cycle_cost = DIV_CYCLE_CNT;
+      nextF.stalled = DIV_CYCLE_CNT - 1;
+      nextD.stalled = DIV_CYCLE_CNT - 1;
+      nextE.stalled = DIV_CYCLE_CNT - 2;
       break;
     case OP_SRL:
       valE = (int64_t) ((uint64_t) valA >> valB);
@@ -223,6 +229,14 @@ void PipelineArch::execute() {
       break;
     case OP_REM:
       valE = valA % valB;
+      if (last_inst && last_inst->op == OP_DIV && last_inst->rs1 == inst->rs1 && last_inst->rs2 == inst->rs2) {
+        cycle_cost = 0;
+      } else {
+        cycle_cost = REM_CYCLE_CNT;
+        nextF.stalled = REM_CYCLE_CNT - 1;
+        nextD.stalled = REM_CYCLE_CNT - 1;
+        nextE.stalled = REM_CYCLE_CNT - 1;
+      }
       break;
     case OP_AND:
       valE = valA & valB;
@@ -238,9 +252,21 @@ void PipelineArch::execute() {
       break;
     case OP_DIVW:
       valE = (int32_t) ((int32_t) valA / (int32_t) valB);
+      cycle_cost = DIV_CYCLE_CNT;
+      nextF.stalled = DIV_CYCLE_CNT - 1;
+      nextD.stalled = DIV_CYCLE_CNT - 1;
+      nextE.stalled = DIV_CYCLE_CNT - 1;
       break;
     case OP_REMW:
       valE = (int32_t) ((int32_t) valA % (int32_t) valB);
+      if (last_inst && last_inst->op == OP_DIVW && last_inst->rs1 == inst->rs1 && last_inst->rs2 == inst->rs2) {
+        cycle_cost = 0;
+      } else {
+        cycle_cost = REM_CYCLE_CNT;
+        nextF.stalled = REM_CYCLE_CNT - 1;
+        nextD.stalled = REM_CYCLE_CNT - 1;
+        nextE.stalled = REM_CYCLE_CNT - 1;
+      }
       break;
     case OP_SLLW:
       valE = (int32_t) ((int32_t) valA << (uint32_t) valB);
@@ -613,7 +639,8 @@ void PipelineArch::writeback() {
 
 
   if (verbose) {
-    fprintf(stderr, "writeb\t: %.08llx:  %.8x    %s\tdstE = %d, valE = %lld, dstM = %d, valM = %lld\n", inst->addr, inst->inst,
+    fprintf(stderr, "writeb\t: %.08llx:  %.8x    %s\tdstE = %d, valE = %lld, dstM = %d, valM = %lld\n", inst->addr,
+            inst->inst,
             inst->to_str().c_str(), dstE, valE, dstM, valM);
   }
 }
@@ -655,6 +682,6 @@ void PipelineArch::inc_cycle() {
 
   fwE = fwM1 = fwM2 = NO_REG;
 
-  cycle_cnt += 1;
+  cycle_cnt += cycle_cost;
 }
 
