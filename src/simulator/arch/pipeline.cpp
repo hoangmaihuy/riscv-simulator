@@ -40,48 +40,62 @@ void PipelineArch::fetch() {
     sim->cpu->set_pc(valP + INST_SIZE);
 
   if (verbose) {
-    fprintf(stderr, "\nfetch: %.08llx:  %x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
+    fprintf(stderr, "\nfetch\t: %.08llx:  %.08x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
   }
 }
 
 void PipelineArch::decode() {
 
   if (curF.stalled) {
+    if (verbose) {
+      fprintf(stderr, "decode\t: stalled\n");
+    }
     return;
   }
 
   if (curF.bubbled) {
     nextD.bubbled = true;
+    if (verbose) {
+      fprintf(stderr, "decode\t: bubbled\n");
+    }
     return;
   }
 
   // curF -> nextD
   auto inst = curF.inst;
+  if (verbose) {
+    fprintf(stderr, "decode\t: %.08llx:  %.08x    %s\n", inst->addr, inst->inst, inst->to_str().c_str());
+  }
   // branch predict
-  if (inst->type == TYPE_SB) {
+  if (inst->is_branch()) {
     // branch not taken
     this->predPC = curF.valP + INST_SIZE;
     this->alterPC = curF.valP + inst->imm;
-    nextF.bubbled = true;
   }
 
   int64_t valA = 0, valB = 0, valC = 0;
   uint32_t srcA = inst->rs1;
   uint32_t srcB = inst->rs2;
-  uint32_t dst = NO_REG;
+  uint32_t dstE = NO_REG;
+  uint32_t dstM = NO_REG;
 
   switch (inst->type) {
     case TYPE_R:
       valA = sim->cpu->get_reg(srcA);
       valB = sim->cpu->get_reg(srcB);
-      dst = inst->rd;
+      dstE = inst->rd;
       break;
     case TYPE_I:
       if (inst->op != OP_ECALL) {
-        valA = sim->cpu->get_reg(curD.srcA);
+        valA = sim->cpu->get_reg(srcA);
         valB = 0;
+        srcB = NO_REG;
         valC = inst->imm;
-        dst = inst->rd;
+        if (inst->is_load()) {
+          dstM = inst->rd;
+        } else {
+          dstE = inst->rd;
+        }
       } else {
         valA = sim->cpu->get_reg(reg("a0"));
         srcA = reg("a0");
@@ -90,9 +104,7 @@ void PipelineArch::decode() {
         valC = 0;
         // read syscall
         if (valB >= 10 && valB < 20) {
-          dst = reg("a0");
-        } else {
-          dst = NO_REG;
+          dstE = reg("a0");
         }
       }
       break;
@@ -100,25 +112,31 @@ void PipelineArch::decode() {
       valA = sim->cpu->get_reg(srcA);
       valB = sim->cpu->get_reg(srcB);
       valC = inst->imm;
-      dst = NO_REG;
       break;
     case TYPE_SB:
       valA = sim->cpu->get_reg(srcA);
       valB = sim->cpu->get_reg(srcB);
       valC = inst->imm;
-      dst = NO_REG;
       break;
     case TYPE_U:
       valA = valB = 0;
+      srcA = srcB = NO_REG;
       valC = inst->imm;
-      dst = inst->rd;
+      dstE = inst->rd;
       break;
     case TYPE_UJ:
-      valA = valB = 0;
+      valA = 0;
+      valB = 0;
+      srcA = srcB = NO_REG;
       valC = inst->imm;
-      dst = inst->rd;
+      dstE = inst->rd;
       break;
   }
+
+  if (srcA == reg("zero"))
+    valA = 0;
+  if (srcB == reg("zero"))
+    valB = 0;
 
   nextD.stalled = 0;
   nextD.bubbled = false;
@@ -129,18 +147,25 @@ void PipelineArch::decode() {
   nextD.valC = valC;
   nextD.valP = curF.valP;
   nextD.inst = inst;
-  nextD.dst = dst;
+  nextD.dstE = dstE;
+  nextD.dstM = dstM;
 }
 
 void PipelineArch::execute() {
 
   if (curD.stalled) {
     nextE.bubbled = true;
+    if (verbose) {
+      fprintf(stderr, "execute\t: stalled\n");
+    }
     return;
   }
 
   if (curD.bubbled) {
     nextE.bubbled = true;
+    if (verbose) {
+      fprintf(stderr, "execute\t: bubbled\n");
+    }
     return;
   }
 
@@ -153,7 +178,13 @@ void PipelineArch::execute() {
   int64_t valP = curD.valP;
   int64_t valE;
   bool cond = false;
-  uint32_t dst = curD.dst;
+  uint32_t dstE = curD.dstE;
+  uint32_t dstM = curD.dstM;
+
+  if (curD.srcA == reg("zero"))
+    valA = 0;
+  if (curD.srcB == reg("zero"))
+    valB = 0;
 
   switch (inst->op) {
     /* R-Type instruction */
@@ -331,7 +362,7 @@ void PipelineArch::execute() {
   }
 
   if (inst->is_load()) {
-    if (nextD.srcA == curD.dst || nextD.srcB == curD.dst) {
+    if (nextD.srcA == dstM || nextD.srcB == dstM) {
       nextF.stalled = 2;
       nextD.stalled = 2;
       nextE.bubbled = true;
@@ -339,14 +370,18 @@ void PipelineArch::execute() {
   }
 
   // forward data
-  if (!inst->is_load() && dst != NO_REG) {
-    if (nextD.srcA == dst) {
+  if (!inst->is_load() && dstE != NO_REG) {
+    if (nextD.srcA == dstE) {
       nextD.valA = valE;
-      fwE = dst;
+      fwE = dstE;
+      if (verbose)
+        fprintf(stderr, "execute\t: forward %lld to %s\n", valE, get_regname(fwE));
     }
-    if (nextD.srcB == dst) {
+    if (nextD.srcB == dstE) {
       nextD.valB = valE;
-      fwE = dst;
+      fwE = dstE;
+      if (verbose)
+        fprintf(stderr, "execute\t: forward %lld to %s\n", valE, get_regname(fwE));
     }
   }
 
@@ -358,24 +393,44 @@ void PipelineArch::execute() {
   nextE.valB = valB;
   nextE.valE = valE;
   nextE.cond = cond;
+  nextE.dstE = dstE;
+  nextE.dstM = curD.dstM;
+
+  if (verbose) {
+    fprintf(stderr, "execute\t: %.08llx:  %.8x    %s, valA = %lld, valB = %lld, valC = %lld, valE = %lld\n", inst->addr,
+            inst->inst, inst->to_str().c_str(),
+            valA, valB, valC, valE);
+  }
 }
 
 void PipelineArch::memory() {
 
   if (curE.stalled) {
+    if (verbose) {
+      fprintf(stderr, "memory\t: stalled\n");
+    }
     return;
   }
 
   if (curE.bubbled) {
     nextM.bubbled = true;
+    if (verbose) {
+      fprintf(stderr, "memory\t: bubbled\n");
+    }
     return;
   }
 
   int64_t valM;
   int64_t valE = curE.valE;
   int64_t valB = curE.valB;
-  uint32_t dst = curE.dst;
+  uint32_t dstE = curE.dstE;
+  uint32_t dstM = curE.dstM;
   auto inst = curE.inst;
+
+  if (verbose) {
+    fprintf(stderr, "memory\t: %.08llx:  %.8x    %s\tvalE = %lld\n", inst->addr, inst->inst, inst->to_str().c_str(),
+            valE);
+  }
 
   switch (inst->op) {
     case OP_LB:
@@ -420,19 +475,46 @@ void PipelineArch::memory() {
   }
 
   // forward data
-  if (dst != NO_REG && inst->is_load()) {
-    if (nextD.srcA == dst && fwE != dst) {
-      nextD.valA = valM;
-      fwM = dst;
+  if (dstE != NO_REG) {
+    if (nextD.srcA == dstE && fwE != dstE) {
+      nextD.valA = valE;
+      fwM1 = dstE;
+      if (verbose)
+        fprintf(stderr, "memory\t: forward %lld to %s\n", valE, get_regname(dstE));
     }
-    if (nextD.srcB == dst && fwE != dst) {
-      nextD.valB = valM;
-      fwM = dst;
+    if (nextD.srcB == dstE && fwE != dstE) {
+      nextD.valB = valE;
+      fwM1 = dstE;
+      if (verbose)
+        fprintf(stderr, "memory\t: forward %lld to %s\n", valE, get_regname(dstE));
     }
     if (curD.stalled) {
-      if (curD.srcA == dst) curD.valA = valM;
-      if (curD.srcB == dst) curD.valB = valM;
-      fwM = dst;
+      if (curD.srcA == dstE) curD.valA = valE;
+      if (curD.srcB == dstE) curD.valB = valE;
+      fwM1 = dstE;
+    }
+  }
+
+  // forward data
+  if (dstM != NO_REG) {
+    if (nextD.srcA == dstM && fwE != dstM) {
+      nextD.valA = valM;
+      fwM2 = dstM;
+      if (verbose) {
+        fprintf(stderr, "memory\t: forward %lld to %s\n", valM, get_regname(dstM));
+      }
+    }
+    if (nextD.srcB == dstM && fwE != dstM) {
+      nextD.valB = valM;
+      fwM2 = dstM;
+      if (verbose) {
+        fprintf(stderr, "memory\t: forward %lld to %s\n", valM, get_regname(dstM));
+      }
+    }
+    if (curD.stalled) {
+      if (curD.srcA == dstM) curD.valA = valM;
+      if (curD.srcB == dstM) curD.valB = valM;
+      fwM2 = dstM;
     }
   }
 
@@ -441,29 +523,41 @@ void PipelineArch::memory() {
   nextM.inst = inst;
   nextM.valM = valM;
   nextM.valP = curE.valP;
-  nextM.dst = dst;
+  nextM.valE = valE;
+  nextM.dstE = dstE;
+  nextM.dstM = dstM;
   nextM.cond = curE.cond;
 }
 
 void PipelineArch::writeback() {
 
-  if (curM.bubbled || curM.stalled) {
+  if (curM.stalled) {
+    if (verbose)
+      fprintf(stderr, "writeb\t: stalled\n");
     return;
   }
 
-  auto dst = curM.dst;
+  if (curM.bubbled) {
+    if (verbose)
+      fprintf(stderr, "writeb\t: bubbled\n");
+    return;
+  }
+
+  auto dstE = curM.dstE;
+  auto dstM = curM.dstM;
   auto valE = curM.valE;
   auto valM = curM.valM;
   auto valP = curM.valP;
+  auto inst = curM.inst;
   int64_t valW;
 
-  switch (curW.type) {
+  switch (inst->type) {
     case TYPE_R:
     case TYPE_U:
       valW = valE;
       break;
     case TYPE_I:
-      switch (curW.op) {
+      switch (inst->op) {
         case OP_JALR:
           valW = valP + INST_SIZE;
           break;
@@ -490,14 +584,30 @@ void PipelineArch::writeback() {
   }
 
   // forward data
-  if (dst != NO_REG) {
-    if (nextD.srcA == dst && fwE != dst && fwM != dst) {
+  if (dstE != NO_REG) {
+    if (nextD.srcA == dstE && fwE != dstE && fwM1 != dstE && fwM2 != dstE) {
       nextD.valA = valW;
     }
-    if (nextD.srcB == dst && fwE != dst && fwM != dst) {
+    if (nextD.srcB == dstE && fwE != dstE && fwM1 != dstE && fwM2 != dstE) {
       nextD.valB = valW;
     }
-    sim->cpu->set_reg(dst, valW);
+    sim->cpu->set_reg(dstE, valW);
+  }
+
+  if (dstM != NO_REG) {
+    if (nextD.srcA == dstM && fwE != dstM && fwM1 != dstM && fwM2 != dstM) {
+      nextD.valA = valW;
+    }
+    if (nextD.srcB == dstM && fwE != dstM && fwM1 != dstM && fwM2 != dstM) {
+      nextD.valB = valW;
+    }
+    sim->cpu->set_reg(dstM, valW);
+  }
+
+
+  if (verbose) {
+    fprintf(stderr, "writeb\t: %.08llx:  %.8x    %s\tvalE = %lld, valM = %lld\n", inst->addr, inst->inst,
+            inst->to_str().c_str(), valE, valM);
   }
 }
 
@@ -510,6 +620,8 @@ void PipelineArch::run_cycle() {
   memory();
   writeback();
   inc_cycle();
+  if (verbose)
+    sim->cpu->print();
 }
 
 void PipelineArch::inc_cycle() {
@@ -534,7 +646,7 @@ void PipelineArch::inc_cycle() {
   memset(&nextE, 0, sizeof(nextE));
   memset(&nextM, 0, sizeof(nextM));
 
-  fwE = fwM = NO_REG;
+  fwE = fwM1 = fwM2 = NO_REG;
 
   cycle_cnt += 1;
 }

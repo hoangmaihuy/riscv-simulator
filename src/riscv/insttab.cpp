@@ -53,7 +53,7 @@ const vector<RVInstDef> InstTab = {
     {"srliw", OP_SRLIW, TYPE_I,  0x1b, 0x5, 0x00},
     {"sraiw", OP_SRAIW, TYPE_I,  0x1b, 0x5, 0x20},
 
-    {"salr",  OP_JALR,  TYPE_I,  0x67, 0x0,        SKIP_FUNCT},
+    {"jalr",  OP_JALR,  TYPE_I,  0x67, 0x0,        SKIP_FUNCT},
 
     {"ecall", OP_ECALL, TYPE_I,  0x73, 0x0, 0x000},
 

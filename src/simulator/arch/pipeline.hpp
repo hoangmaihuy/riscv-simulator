@@ -20,7 +20,7 @@ struct DReg {
   bool bubbled;
   int stalled;
   RVInstruction *inst;
-  uint32_t srcA, srcB, dst;
+  uint32_t srcA, srcB, dstE, dstM;
   int64_t valA, valB, valC;
   uint64_t valP;
 };
@@ -30,7 +30,7 @@ struct EReg {
   int stalled;
   RVInstruction *inst;
   int64_t valA, valB, valE, valP;
-  uint32_t dst;
+  uint32_t dstE, dstM;
   bool cond;
 };
 
@@ -39,7 +39,7 @@ struct MReg {
   int stalled;
   RVInstruction *inst;
   int64_t valE, valP, valM;
-  uint32_t dst;
+  uint32_t dstE, dstM;
   bool cond;
 };
 
@@ -59,7 +59,7 @@ protected:
 
   uint64_t predPC, alterPC;
 
-  uint32_t fwE, fwM; // forward destination register
+  uint32_t fwE, fwM1, fwM2; // forward destination register
 
   FReg curF, nextF;
   DReg curD, nextD;

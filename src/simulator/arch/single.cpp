@@ -50,6 +50,7 @@ void SingleCycleArch::fetch() {
 }
 
 void SingleCycleArch::decode() {
+  sim->cpu->set_reg(0, 0);
   switch (inst->type) {
     case TYPE_R:
       valA = sim->cpu->get_reg(inst->rs1);
@@ -359,4 +360,7 @@ void SingleCycleArch::run_cycle() {
   memory();
   writeback();
   inc_cycle();
+  if (verbose) {
+    sim->cpu->print();
+  }
 }
