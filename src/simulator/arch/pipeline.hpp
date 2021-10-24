@@ -10,44 +10,42 @@
 #include "riscv/riscv.hpp"
 
 struct FReg {
-  bool stalled;
   bool bubbled;
-  uint64_t predPC;
+  int stalled;
+  uint64_t valP;
+  RVInstruction *inst;
 };
 
 struct DReg {
-  bool stalled;
   bool bubbled;
-  RVInstOp op;
-  RVInstType type;
-  uint32_t srcA, srcB;
-  int64_t valC;
+  int stalled;
+  RVInstruction *inst;
+  uint32_t srcA, srcB, dst;
+  int64_t valA, valB, valC;
   uint64_t valP;
-  uint32_t dstE;
 };
 
 struct EReg {
-  bool stalled;
   bool bubbled;
-  RVInstOp op;
-  RVInstType type;
-  int64_t valA, valB, valC, valP;
-  uint32_t dstE, dstM;
+  int stalled;
+  RVInstruction *inst;
+  int64_t valA, valB, valE, valP;
+  uint32_t dst;
+  bool cond;
 };
 
 struct MReg {
-  bool stalled;
   bool bubbled;
-  RVInstOp op;
-  RVInstType type;
-  int64_t valB, valE, valP;
-  uint32_t dstE, dstM;
+  int stalled;
+  RVInstruction *inst;
+  int64_t valE, valP, valM;
+  uint32_t dst;
   bool cond;
 };
 
 struct WReg {
-  bool stalled;
   bool bubbled;
+  int stalled;
   RVInstOp op;
   RVInstType type;
   int64_t valP, valM, valE;
@@ -58,6 +56,10 @@ class PipelineArch : public BaseArch {
 protected:
   unsigned int data_hazard_cnt = 0;
   unsigned int control_hazard_cnt = 0;
+
+  uint64_t predPC, alterPC;
+
+  uint32_t fwE, fwM; // forward destination register
 
   FReg curF, nextF;
   DReg curD, nextD;

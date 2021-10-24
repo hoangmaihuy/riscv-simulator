@@ -47,7 +47,7 @@ public:
 
   void init_cpu();
 
-  void syscall();
+  int64_t syscall(int64_t sysnum, int64_t argument);
 
 private:
 

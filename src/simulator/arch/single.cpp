@@ -66,7 +66,15 @@ void SingleCycleArch::decode() {
         dstE = inst->rd;
         dstM = inst->rd;
       } else {
-        valA = valB = valC = dstE = 0;
+        valA = sim->cpu->get_reg(reg("a0"));
+        valB = sim->cpu->get_reg(reg("a7"));
+        valC = 0;
+        // read syscall
+        if (valB >= 10 && valB < 20) {
+          dstE = reg("a0");
+        } else {
+          dstE = -1;
+        }
       }
       break;
     case TYPE_S:
@@ -211,8 +219,7 @@ void SingleCycleArch::execute() {
       valE = valA + valC;
       break;
     case OP_ECALL:
-      valE = 0;
-      sim->syscall();
+      valE = sim->syscall(valB, valA);
       break;
       /* S-Type instructions */
     case OP_SB:
@@ -316,6 +323,8 @@ void SingleCycleArch::writeback() {
           sim->cpu->set_reg(dstE, valP + INST_SIZE);
           break;
         case OP_ECALL:
+          if (valB >= 10 && valB < 20)
+            sim->cpu->set_reg(dstE, valE);
           break;
         case OP_LB:
         case OP_LH:

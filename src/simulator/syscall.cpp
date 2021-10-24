@@ -15,8 +15,7 @@
 #define SYS_write_string 23
 #define SYS_exit 93
 
-void Simulator::syscall() {
-  auto sysnum = cpu->get_reg(reg("a7"));
+int64_t Simulator::syscall(int64_t sysnum, int64_t argument) {
   int x;
   long long y;
   char ch;
@@ -24,37 +23,34 @@ void Simulator::syscall() {
 
   switch (sysnum) {
     case SYS_exit:
-      exit_code = cpu->get_reg(reg("a0"));
+      exit_code = argument;
       exited = true;
       if (verbose)
         fprintf(stderr, "\nProgram terminated with exit code %d\n", exit_code);
       break;
     case SYS_read_int:
       scanf("%d", &x);
-      cpu->set_reg(reg("a0"), x);
-      break;
+      return x;
     case SYS_read_long_long:
       scanf("%lld", &y);
-      cpu->set_reg(reg("a0"), y);
-      break;
+      return y;
     case SYS_read_char:
       scanf("%c", &ch);
-      cpu->set_reg(reg("a0"), ch);
-      break;
+      return ch;
     case SYS_write_int:
-      x = cpu->get_reg(reg("a0"));
+      x = argument;
       printf("%d", x);
       break;
     case SYS_write_long_long:
-      y = cpu->get_reg(reg("a0"));
+      y = argument;
       printf("%lld", y);
       break;
     case SYS_write_char:
-      ch = cpu->get_reg(reg("a0"));
+      ch = argument;
       printf("%c", ch);
       break;
     case SYS_write_string:
-      addr = cpu->get_reg(reg("a0"));
+      addr = argument;
       while (true) {
         ch = (char) memory->read(addr, 1);
         if (!ch) break;
@@ -66,5 +62,5 @@ void Simulator::syscall() {
       fprintf(stderr, "Unhandled system call: %lld\n", sysnum);
       exit(1);
   }
-
+  return 0;
 }

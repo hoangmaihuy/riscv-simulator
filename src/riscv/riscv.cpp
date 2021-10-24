@@ -147,3 +147,19 @@ string RVInstruction::type_uj_str() const {
   sprintf(buf, "%s %s, %d", opname, get_regname(rd), imm);
   return {buf};
 }
+
+bool RVInstruction::is_load() const {
+  return (op == OP_LB || op == OP_LH || op == OP_LW || op == OP_LD || op == OP_LBU || op == OP_LHU || op == OP_LWU);
+}
+
+bool RVInstruction::is_jump() const {
+  return (op == OP_JAL || op == OP_JALR);
+}
+
+bool RVInstruction::is_branch() const {
+  return type == TYPE_SB;
+}
+
+
+
+

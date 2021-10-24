@@ -10,6 +10,7 @@
 #define SKIP_FUNCT (unsigned int)-1
 #define MAX_INST_LENGTH 50
 #define INST_SIZE 4
+#define NO_REG -1
 
 enum RVInstOp {
   /* R-Type */
@@ -72,6 +73,12 @@ public:
   void decode();
 
   string to_str();
+
+  bool is_load() const;
+
+  bool is_jump() const;
+
+  bool is_branch() const;
 
 private:
   string type_r_str() const;
