@@ -53,6 +53,11 @@ Simulator::Simulator(char *elf_path, SimulatorMode sim_mode) {
   this->elf_path = elf_path;
   memory = new VirtualMemory();
   cpu = new CPU();
+
+  read_elf();
+  load_memory();
+  init_cpu();
+
   switch (sim_mode) {
     case SIM_MODE_SINGLE:
       arch = new SingleCycleArch(this);
@@ -60,17 +65,13 @@ Simulator::Simulator(char *elf_path, SimulatorMode sim_mode) {
     case SIM_MODE_MULTI:
       arch = new MultiCycleArch(this);
       break;
-//    case SIM_MODE_PIPE:
-//      arch = new PipelineArch(this);
-//      break;
+    case SIM_MODE_PIPE:
+      arch = new PipelineArch(this);
+      break;
     default:
       fprintf(stderr, "Unknown simulator mode: %d\n", sim_mode);
       break;
   }
-
-  read_elf();
-  load_memory();
-  init_cpu();
 }
 
 void Simulator::run(bool debug_mode) {

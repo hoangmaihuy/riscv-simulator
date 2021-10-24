@@ -11,6 +11,7 @@
 #include "riscv/riscv.hpp"
 #include "simulator/arch/single.hpp"
 #include "simulator/arch/multi.hpp"
+#include "simulator/arch/pipeline.hpp"
 
 #define STACK_ADDR (MAX_MEM >> 1)
 #define STACK_SIZE (1 << 20)
