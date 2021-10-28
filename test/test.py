@@ -14,8 +14,8 @@ import sys
 # directories that storing test cases
 dirs = [
     './functional',
-    # './basic',
-    # './class',
+    './basic',
+    './class',
 ]
 gcc_compiler = 'gcc'
 riscv_compiler = 'riscv64-unknown-elf-gcc'

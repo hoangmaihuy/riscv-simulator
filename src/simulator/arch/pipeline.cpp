@@ -6,6 +6,8 @@
 #include "simulator/simulator.hpp"
 
 PipelineArch::PipelineArch(Simulator *sim) : BaseArch(sim) {
+  memset(&stats, 0, sizeof(stats));
+
   memset(&curF, 0, sizeof(curF));
   memset(&nextF, 0, sizeof(nextF));
   memset(&curD, 0, sizeof(curD));
@@ -168,7 +170,7 @@ void PipelineArch::execute() {
     return;
   }
 
-  inst_cnt += 1;
+  stats.inst_cnt += 1;
 
   auto inst = curD.inst;
   auto last_inst = curE.inst;
@@ -385,12 +387,14 @@ void PipelineArch::execute() {
     sim->cpu->set_pc(alterPC);
     nextF.bubbled = true;
     nextD.bubbled = true;
+    stats.ctrl_hazards++;
   }
 
   if (inst->is_jump()) {
     sim->cpu->set_pc(valE);
     nextF.bubbled = true;
     nextD.bubbled = true;
+    stats.ctrl_hazards++;
   }
 
   if (inst->is_load()) {
@@ -398,6 +402,7 @@ void PipelineArch::execute() {
       nextF.stalled = 2;
       nextD.stalled = 2;
       nextE.bubbled = true;
+      stats.mem_hazards++;
     }
   }
 
@@ -405,6 +410,7 @@ void PipelineArch::execute() {
   if (!inst->is_load() && dstE != NO_REG) {
     if (nextD.srcA == dstE) {
       nextD.valA = valE;
+      stats.data_hazards++;
       fwE = dstE;
       if (verbose)
         fprintf(stderr, "execute\t: forward %lld to %s\n", valE, get_regname(fwE));
@@ -412,6 +418,7 @@ void PipelineArch::execute() {
     if (nextD.srcB == dstE) {
       nextD.valB = valE;
       fwE = dstE;
+      stats.data_hazards++;
       if (verbose)
         fprintf(stderr, "execute\t: forward %lld to %s\n", valE, get_regname(fwE));
     }
@@ -511,18 +518,26 @@ void PipelineArch::memory() {
     if (nextD.srcA == dstE && fwE != dstE) {
       nextD.valA = valE;
       fwM1 = dstE;
+      stats.data_hazards++;
       if (verbose)
         fprintf(stderr, "memory\t: forward %lld to %s\n", valE, get_regname(dstE));
     }
     if (nextD.srcB == dstE && fwE != dstE) {
       nextD.valB = valE;
       fwM1 = dstE;
+      stats.data_hazards++;
       if (verbose)
         fprintf(stderr, "memory\t: forward %lld to %s\n", valE, get_regname(dstE));
     }
     if (curD.stalled) {
-      if (curD.srcA == dstE) curD.valA = valE;
-      if (curD.srcB == dstE) curD.valB = valE;
+      if (curD.srcA == dstE) {
+        curD.valA = valE;
+        stats.data_hazards++;
+      }
+      if (curD.srcB == dstE) {
+        curD.valB = valE;
+        stats.data_hazards++;
+      }
       fwM1 = dstE;
     }
   }
@@ -532,6 +547,7 @@ void PipelineArch::memory() {
     if (nextD.srcA == dstM && fwE != dstM) {
       nextD.valA = valM;
       fwM2 = dstM;
+      stats.data_hazards++;
       if (verbose) {
         fprintf(stderr, "memory\t: forward %lld to %s\n", valM, get_regname(dstM));
       }
@@ -539,14 +555,22 @@ void PipelineArch::memory() {
     if (nextD.srcB == dstM && fwE != dstM) {
       nextD.valB = valM;
       fwM2 = dstM;
+      stats.data_hazards++;
       if (verbose) {
         fprintf(stderr, "memory\t: forward %lld to %s\n", valM, get_regname(dstM));
       }
     }
     if (curD.stalled) {
-      if (curD.srcA == dstM) curD.valA = valM;
-      if (curD.srcB == dstM) curD.valB = valM;
-      fwM2 = dstM;
+      if (curD.srcA == dstM) {
+        curD.valA = valM;
+        fwM2 = dstM;
+        stats.data_hazards++;
+      }
+      if (curD.srcB == dstM) {
+        curD.valB = valM;
+        fwM2 = dstM;
+        stats.data_hazards++;
+      }
     }
   }
 
@@ -620,9 +644,11 @@ void PipelineArch::writeback() {
   if (dstE != NO_REG) {
     if (nextD.srcA == dstE && fwE != dstE && fwM1 != dstE && fwM2 != dstE) {
       nextD.valA = valW;
+      stats.data_hazards++;
     }
     if (nextD.srcB == dstE && fwE != dstE && fwM1 != dstE && fwM2 != dstE) {
       nextD.valB = valW;
+      stats.data_hazards++;
     }
     sim->cpu->set_reg(dstE, valW);
   }
@@ -630,9 +656,11 @@ void PipelineArch::writeback() {
   if (dstM != NO_REG) {
     if (nextD.srcA == dstM && fwE != dstM && fwM1 != dstM && fwM2 != dstM) {
       nextD.valA = valW;
+      stats.data_hazards++;
     }
     if (nextD.srcB == dstM && fwE != dstM && fwM1 != dstM && fwM2 != dstM) {
       nextD.valB = valW;
+      stats.data_hazards++;
     }
     sim->cpu->set_reg(dstM, valW);
   }
@@ -682,6 +710,17 @@ void PipelineArch::inc_cycle() {
 
   fwE = fwM1 = fwM2 = NO_REG;
 
-  cycle_cnt += cycle_cost;
+  stats.cycle_cnt += cycle_cost;
+}
+
+void PipelineArch::print_stats() {
+  if (!verbose) return;
+  fprintf(stderr, "Statistics:\n");
+  fprintf(stderr, "  Number of instructions : %d\n", stats.inst_cnt);
+  fprintf(stderr, "  Number of cycles       : %d\n", stats.cycle_cnt);
+  fprintf(stderr, "  CPI                    : %f\n", (double) stats.cycle_cnt / stats.inst_cnt);
+  fprintf(stderr, "  Control hazards count  : %d\n", stats.ctrl_hazards);
+  fprintf(stderr, "  Memory hazards count   : %d\n", stats.mem_hazards);
+  fprintf(stderr, "  Data hazards count     : %d\n", stats.data_hazards);
 }
 

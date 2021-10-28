@@ -43,14 +43,26 @@ struct MReg {
   bool cond;
 };
 
+struct PipelineStats {
+  unsigned int ctrl_hazards;
+  unsigned int data_hazards;
+  unsigned int mem_hazards;
+
+  unsigned int cycle_cnt;
+  unsigned int inst_cnt;
+};
+
 class PipelineArch : public BaseArch {
 protected:
+
 
   uint64_t predPC, alterPC;
 
   uint32_t fwE, fwM1, fwM2; // forward destination register
 
   unsigned int cycle_cost;
+
+  PipelineStats stats;
 
   FReg curF, nextF;
   DReg curD, nextD;
@@ -70,6 +82,8 @@ protected:
   void run_cycle() override;
 
   virtual void inc_cycle();
+
+  void print_stats() override;
 
 public:
   explicit PipelineArch(Simulator *sim);
