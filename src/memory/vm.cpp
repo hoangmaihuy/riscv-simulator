@@ -68,6 +68,12 @@ void VirtualMemory::read_buf(uint64_t addr, uint64_t size, char *buf) {
   auto offset = addr & (BLOCK_SIZE - 1);
   for (int i = 0; i < size; i++) {
     buf[offset + i] = vma.data[idx + i];
+    if (verbose) {
+      fprintf(stderr, "%hhx ", buf[offset + i]);
+    }
+  }
+  if (verbose) {
+    fprintf(stderr, "\n");
   }
 }
 
@@ -106,7 +112,8 @@ void VirtualMemory::write_buf(uint64_t addr, unsigned int size, char *buf) {
 }
 
 void VirtualMemory::HandleRequest(uint64_t addr, int bytes, int read, char *content, int &hit, int &time) {
-//  fprintf(stderr, "vm handle: addr = 0x%llx, size = %d\n", addr, bytes);
+  if (verbose)
+    fprintf(stderr, "vm handle: addr = 0x%llx, size = %d\n", addr, bytes);
   hit = 1;
   time = latency_.hit_latency + latency_.bus_latency;
   stats_.access_time += time;
@@ -117,9 +124,10 @@ void VirtualMemory::HandleRequest(uint64_t addr, int bytes, int read, char *cont
   auto block_addr = addr & ~(BLOCK_SIZE-1);
 
   if (read) {
-    this->read_buf(addr, bytes, content);
+    this->read_buf(block_addr, BLOCK_SIZE, content);
   } else {
     this->write_buf(addr, bytes, content);
+    // read the whole block just in case write allocate
     this->read_buf(block_addr, BLOCK_SIZE, content);
   }
 }

@@ -19,8 +19,8 @@
 #define LLC_HIT_LAT 20
 #define LLC_BUS_LAT 20
 #define MEM_HIT_LAT 100
-#define WRITE_THROUGH true
-#define WRITE_ALLOCATE false
+#define WRITE_THROUGH false
+#define WRITE_ALLOCATE true
 #define BLOCK_SIZE 64
 #define ASSOCIATIVITY 8
 

@@ -3,12 +3,14 @@
 #include <math.h>
 #include "cache.hpp"
 
+extern bool verbose;
+
 bool is_power_of_two(uint64_t x) {
   return x && !(x & (x - 1));
 }
 
 uint64_t get_bits(uint64_t x, unsigned int lo, unsigned int hi) {
-  return x << (ADDR_LEN - hi) >> (ADDR_LEN - hi + lo);
+  return x << (63 - hi) >> (63 - hi + lo);
 }
 
 void Cache::SetConfig(CacheConfig cc) {
@@ -41,10 +43,8 @@ void Cache::SetConfig(CacheConfig cc) {
 void Cache::HandleRequest(uint64_t addr, int bytes, int read,
                           char *content, int &hit, int &time) {
   assert(bytes > 0 && bytes <= config_.block_size);
-//  fprintf(stderr, "cache handle: addr = 0x%llx, size = %d\n", addr, bytes);
-  if (addr == 0x11e70) {
-    bool debug = true;
-  }
+  if (verbose)
+    fprintf(stderr, "cache handle: addr = 0x%llx, size = %d\n", addr, bytes);
   stats_.access_counter++;
   hit = 0;
   time = 0;
@@ -65,7 +65,7 @@ void Cache::HandleRequest(uint64_t addr, int bytes, int read,
       if (read) {
         ReadRequest(set_idx, line_idx, block_offset, bytes, content);
       } else {
-        WriteRequest(set_idx, line_idx, block_offset, bytes, content, !config_.write_through);
+        WriteRequest(set_idx, line_idx, block_offset, tag, bytes, content, !config_.write_through);
         if (config_.write_through) {
           lower_->HandleRequest(addr, bytes, read, content, lower_hit, lower_time);
         }
@@ -84,14 +84,14 @@ void Cache::HandleRequest(uint64_t addr, int bytes, int read,
     hit = 0;
     stats_.miss_num++;
     if (read) {
-      auto lower_addr = addr & ~((uint64_t)config_.block_size - 1);
+      auto lower_addr = addr & ~((uint64_t) config_.block_size - 1);
       lower_->HandleRequest(lower_addr, config_.block_size, read, content, lower_hit, lower_time);
     } else {
       lower_->HandleRequest(addr, bytes, read, content, lower_hit, lower_time);
     }
     // Replacement
-    if (line_idx != -1 && config_.write_allocate) {
-      WriteRequest(set_idx, line_idx, 0, config_.block_size, content, false);
+    if (line_idx != -1 && (read || config_.write_allocate)) {
+      WriteRequest(set_idx, line_idx, 0, tag, config_.block_size, content, false);
       time += latency_.bus_latency + latency_.hit_latency + lower_time;
       stats_.access_time += latency_.bus_latency + latency_.hit_latency;
     } else {
@@ -111,12 +111,18 @@ void Cache::ReadRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offs
 }
 
 void
-Cache::WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content, bool dirty) {
+Cache::WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, uint64_t tag, int bytes, char *content,
+                    bool dirty) {
+  if (verbose) {
+    fprintf(stderr, "cache write: set = %lld, line = %lld, offset = %lld, tag = %lld\n", set_idx, line_idx,
+            block_offset, tag);
+  }
   auto &line = sets[set_idx].lines[line_idx];
   for (uint64_t i = block_offset; i < block_offset + bytes; i++) {
     line.blocks[i] = content[i];
   }
   line.access_counter = stats_.access_counter;
+  line.tag = tag;
   line.valid = true;
   line.dirty = dirty;
 }
@@ -147,11 +153,6 @@ int Cache::GetLine(uint64_t set_idx, uint64_t tag) {
 
 bool Cache::ReplaceDecision(int line_idx, int read) {
   return line_idx == -1;
-//  if (read) {
-//    return line_idx == -1;
-//  } else {
-//    return line_idx == -1 && config_.write_allocate;
-//  }
 }
 
 int Cache::ReplaceAlgorithm(uint64_t set_idx, int &time) {
@@ -169,7 +170,8 @@ int Cache::ReplaceAlgorithm(uint64_t set_idx, int &time) {
 
   auto &line = lines[line_idx];
 
-  if (line.dirty) {
+  // Write back to lower layer
+  if (line.valid && line.dirty) {
     uint64_t addr = (line.tag << (s + b)) | (set_idx << b);
     for (int i = 0; i < config_.block_size; i++)
       buf[i] = line.blocks[i];
@@ -178,6 +180,7 @@ int Cache::ReplaceAlgorithm(uint64_t set_idx, int &time) {
     time += lower_time;
   }
 
+  free(buf);
   return line_idx;
 }
 

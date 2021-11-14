@@ -1,4 +1,4 @@
-const int N = 10000;
+const int N = 1000;
 
 int long_array(int k) {
   int a1[N];

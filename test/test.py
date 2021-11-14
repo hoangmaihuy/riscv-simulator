@@ -13,8 +13,8 @@ import sys
 
 # directories that storing test cases
 dirs = [
-    # './functional',
-    # './basic',
+    './functional',
+    './basic',
     './class',
 ]
 gcc_compiler = 'gcc'

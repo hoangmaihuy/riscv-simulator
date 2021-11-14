@@ -60,7 +60,7 @@ private:
 
   void ReadRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content);
 
-  void WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content, bool dirty);
+  void WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, uint64_t tag, int bytes, char *content, bool dirty);
 
   // Replacement
   bool ReplaceDecision(int line_idx, int read);
