@@ -49,7 +49,7 @@ public:
 
   /* Write up to 8 bytes */
   void write(uint64_t addr, unsigned int size, uint64_t data);
-  void write_buf(uint64_t addr, uint64_t size, char *data);
+  void write_buf(uint64_t addr, unsigned int size, char *data);
 
   DISALLOW_COPY_AND_ASSIGN(VirtualMemory);
 };

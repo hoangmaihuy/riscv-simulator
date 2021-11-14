@@ -40,13 +40,16 @@ void Cache::SetConfig(CacheConfig cc) {
 
 void Cache::HandleRequest(uint64_t addr, int bytes, int read,
                           char *content, int &hit, int &time) {
-  assert(bytes > 0 && bytes <= 8);
+  assert(bytes > 0 && bytes <= config_.block_size);
+//  fprintf(stderr, "cache handle: addr = 0x%llx, size = %d\n", addr, bytes);
+  if (addr == 0x11e70) {
+    bool debug = true;
+  }
   stats_.access_counter++;
   hit = 0;
   time = 0;
   uint64_t set_idx, tag, block_offset;
-  bool in_cache;
-  int line_idx = -1;
+  int line_idx;
   int lower_hit = 0, lower_time = 0;
 
   // Bypass?
@@ -56,13 +59,13 @@ void Cache::HandleRequest(uint64_t addr, int bytes, int read,
     line_idx = GetLine(set_idx, tag);
     if (ReplaceDecision(line_idx, read)) {
       // Choose victim
-      line_idx = ReplaceAlgorithm(set_idx);
+      line_idx = ReplaceAlgorithm(set_idx, time);
     } else {
       // return hit & time
       if (read) {
         ReadRequest(set_idx, line_idx, block_offset, bytes, content);
       } else {
-        WriteRequest(set_idx, line_idx, block_offset, bytes, content);
+        WriteRequest(set_idx, line_idx, block_offset, bytes, content, !config_.write_through);
         if (config_.write_through) {
           lower_->HandleRequest(addr, bytes, read, content, lower_hit, lower_time);
         }
@@ -80,11 +83,15 @@ void Cache::HandleRequest(uint64_t addr, int bytes, int read,
     // Fetch from lower layer
     hit = 0;
     stats_.miss_num++;
-    lower_->HandleRequest(addr, bytes, read, content,
-                          lower_hit, lower_time);
+    if (read) {
+      auto lower_addr = addr & ~((uint64_t)config_.block_size - 1);
+      lower_->HandleRequest(lower_addr, config_.block_size, read, content, lower_hit, lower_time);
+    } else {
+      lower_->HandleRequest(addr, bytes, read, content, lower_hit, lower_time);
+    }
     // Replacement
-    if (line_idx != -1) {
-      WriteRequest(set_idx, line_idx, 0, config_.block_size, content);
+    if (line_idx != -1 && config_.write_allocate) {
+      WriteRequest(set_idx, line_idx, 0, config_.block_size, content, false);
       time += latency_.bus_latency + latency_.hit_latency + lower_time;
       stats_.access_time += latency_.bus_latency + latency_.hit_latency;
     } else {
@@ -95,25 +102,23 @@ void Cache::HandleRequest(uint64_t addr, int bytes, int read,
 }
 
 void Cache::ReadRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content) {
-  auto& line = sets[set_idx].lines[line_idx];
+  auto &line = sets[set_idx].lines[line_idx];
+  assert(line.valid);
   for (uint64_t i = block_offset; i < block_offset + bytes; i++) {
     content[i] = line.blocks[i];
   }
   line.access_counter = stats_.access_counter;
 }
 
-void Cache::WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content) {
-  auto& line = sets[set_idx].lines[line_idx];
+void
+Cache::WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content, bool dirty) {
+  auto &line = sets[set_idx].lines[line_idx];
   for (uint64_t i = block_offset; i < block_offset + bytes; i++) {
     line.blocks[i] = content[i];
   }
   line.access_counter = stats_.access_counter;
   line.valid = true;
-  if (config_.write_through) {
-    line.dirty = false;
-  } else {
-    line.dirty = true;
-  }
+  line.dirty = dirty;
 }
 
 bool Cache::BypassDecision() {
@@ -141,21 +146,38 @@ int Cache::GetLine(uint64_t set_idx, uint64_t tag) {
 }
 
 bool Cache::ReplaceDecision(int line_idx, int read) {
-  if (read) {
-    return line_idx == -1;
-  } else {
-    return line_idx == -1 && config_.write_allocate;
-  }
+  return line_idx == -1;
+//  if (read) {
+//    return line_idx == -1;
+//  } else {
+//    return line_idx == -1 && config_.write_allocate;
+//  }
 }
 
-int Cache::ReplaceAlgorithm(uint64_t set_idx) {
+int Cache::ReplaceAlgorithm(uint64_t set_idx, int &time) {
   int line_idx = -1;
+  char *buf = static_cast<char *>(malloc(sizeof(char) * config_.block_size));
   auto &lines = sets[set_idx].lines;
   for (int i = 0; i < lines.size(); i++) {
-    if (!lines[i].valid) return i;
+    if (!lines[i].valid) {
+      line_idx = i;
+      break;
+    };
     if (line_idx == -1 || lines[i].access_counter < lines[line_idx].access_counter)
       line_idx = i;
   }
+
+  auto &line = lines[line_idx];
+
+  if (line.dirty) {
+    uint64_t addr = (line.tag << (s + b)) | (set_idx << b);
+    for (int i = 0; i < config_.block_size; i++)
+      buf[i] = line.blocks[i];
+    int lower_hit, lower_time;
+    lower_->HandleRequest(addr, config_.block_size, 0, buf, lower_hit, lower_time);
+    time += lower_time;
+  }
+
   return line_idx;
 }
 

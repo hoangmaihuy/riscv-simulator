@@ -9,6 +9,21 @@
 #include "vm.hpp"
 #include "vm.hpp"
 
+#define L1_SIZE (32 * (1 << 10))
+#define L1_HIT_LAT 1
+#define L1_BUS_LAT 0
+#define L2_SIZE (256 * (1 << 10))
+#define L2_HIT_LAT 8
+#define L2_BUS_LAT 6
+#define LLC_SIZE (8 * (1 << 20))
+#define LLC_HIT_LAT 20
+#define LLC_BUS_LAT 20
+#define MEM_HIT_LAT 100
+#define WRITE_THROUGH true
+#define WRITE_ALLOCATE false
+#define BLOCK_SIZE 64
+#define ASSOCIATIVITY 8
+
 class Memory {
 public:
   Cache *l1;

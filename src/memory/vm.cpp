@@ -3,6 +3,7 @@
 //
 
 #include "vm.hpp"
+#include "memory.hpp"
 #include "elfio/elf_types.hpp"
 
 void VirtualMemory::insert_vma(uint64_t start, uint64_t size, uint8_t flags, const char *data, uint64_t data_size) {
@@ -55,13 +56,19 @@ uint64_t VirtualMemory::read(uint64_t addr, unsigned int size, bool executable) 
 }
 
 void VirtualMemory::read_buf(uint64_t addr, uint64_t size, char *buf) {
+  if (verbose) {
+    fprintf(stderr, "read_buf: addr = 0x%llx, size = %d\n", addr, size);
+  }
   auto vma = find_vma(addr, size);
   if (!(vma.flags & PF_R)) {
     fprintf(stderr, "read: no R permission, addr = 0x%llx\n", addr);
     exit(1);
   }
   auto idx = addr - vma.start;
-  memcpy(buf, vma.data + idx, size);
+  auto offset = addr & (BLOCK_SIZE - 1);
+  for (int i = 0; i < size; i++) {
+    buf[offset + i] = vma.data[idx + i];
+  }
 }
 
 void VirtualMemory::write(uint64_t addr, unsigned int size, uint64_t data) {
@@ -81,18 +88,25 @@ void VirtualMemory::write(uint64_t addr, unsigned int size, uint64_t data) {
   }
 }
 
-void VirtualMemory::write_buf(uint64_t addr, uint64_t size, char *data) {
-  assert(size > 0 && size <= 8);
+void VirtualMemory::write_buf(uint64_t addr, unsigned int size, char *buf) {
+  if (verbose) {
+    fprintf(stderr, "write_buf: addr = 0x%llx, size = %d\n", addr, size);
+  }
+  assert(size > 0 && size <= BLOCK_SIZE);
   auto vma = find_vma(addr, size);
   if (!(vma.flags & PF_W)) {
     fprintf(stderr, "write: permission error, addr = 0x%llx\n", addr);
     exit(1);
   }
   auto idx = addr - vma.start;
-  memcpy(vma.data + idx, data, size);
+  auto offset = addr & (BLOCK_SIZE-1);
+  for (int i = 0; i < size; i++) {
+    vma.data[idx + i] = buf[offset + i];
+  }
 }
 
 void VirtualMemory::HandleRequest(uint64_t addr, int bytes, int read, char *content, int &hit, int &time) {
+//  fprintf(stderr, "vm handle: addr = 0x%llx, size = %d\n", addr, bytes);
   hit = 1;
   time = latency_.hit_latency + latency_.bus_latency;
   stats_.access_time += time;
@@ -100,9 +114,12 @@ void VirtualMemory::HandleRequest(uint64_t addr, int bytes, int read, char *cont
   if (trace_mode)
     return;
 
+  auto block_addr = addr & ~(BLOCK_SIZE-1);
+
   if (read) {
     this->read_buf(addr, bytes, content);
   } else {
     this->write_buf(addr, bytes, content);
+    this->read_buf(block_addr, BLOCK_SIZE, content);
   }
 }

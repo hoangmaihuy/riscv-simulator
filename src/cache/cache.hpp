@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "storage.hpp"
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -32,7 +33,7 @@ typedef struct CacheSet_ {
 
 class Cache : public Storage {
 public:
-  Cache() {}
+  Cache() { }
 
   ~Cache() {}
 
@@ -54,14 +55,17 @@ private:
 
   // Partitioning
   void PartitionAlgorithm(uint64_t addr, uint64_t &set_idx, uint64_t &tag, uint64_t &block_offset);
+
   int GetLine(uint64_t set_idx, uint64_t tag);
 
-  void ReadRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char* content);
-  void WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char* content);
+  void ReadRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content);
+
+  void WriteRequest(uint64_t set_idx, uint64_t line_idx, uint64_t block_offset, int bytes, char *content, bool dirty);
+
   // Replacement
   bool ReplaceDecision(int line_idx, int read);
 
-  int ReplaceAlgorithm(uint64_t set_idx);
+  int ReplaceAlgorithm(uint64_t set_idx, int &time);
 
   // Prefetching
   bool PrefetchDecision();
