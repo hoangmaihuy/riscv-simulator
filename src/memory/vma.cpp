@@ -2,7 +2,7 @@
 // Created by Mai Hoàng on 15/10/2021.
 //
 
-#include "memory.hpp"
+#include "vm.hpp"
 
 VirtualMemoryArea::VirtualMemoryArea(uint64_t start, uint64_t size, uint8_t flags, const char *data,
                                      uint64_t data_size) {

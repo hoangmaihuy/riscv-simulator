@@ -41,6 +41,7 @@ Makefile
 .idea
 
 riscv-simulator
+cache-simulator
 riscv_simulator.cbp
 test/*.s
 test/tmp_exec

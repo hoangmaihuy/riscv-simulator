@@ -29,6 +29,8 @@ void Simulator::read_elf() {
     }
 }
 
+
+
 void Simulator::load_memory() {
   for (auto segment: elfReader.segments)
     if (segment->get_type() == PT_LOAD) {
@@ -38,9 +40,9 @@ void Simulator::load_memory() {
       auto data = segment->get_data();
       auto dataSize = segment->get_file_size();
 
-      memory->insert_vma(memAddr, memSize, flags, data, dataSize);
+      memory->vm->insert_vma(memAddr, memSize, flags, data, dataSize);
     }
-  memory->insert_vma(STACK_ADDR, STACK_SIZE, PF_R | PF_W, nullptr, 0);
+  memory->vm->insert_vma(STACK_ADDR, STACK_SIZE, PF_R | PF_W, nullptr, 0);
 }
 
 void Simulator::init_cpu() {
@@ -51,7 +53,8 @@ void Simulator::init_cpu() {
 Simulator::Simulator(char *elf_path, SimulatorMode sim_mode) {
   this->exited = false;
   this->elf_path = elf_path;
-  memory = new VirtualMemory();
+
+  memory = new Memory();
   cpu = new CPU();
 
   read_elf();

@@ -6,6 +6,7 @@
 #define RISCV_SIMULATOR_SIMULATOR_HPP
 
 #include "memory/memory.hpp"
+#include "cache/cache.hpp"
 #include "cpu/cpu.hpp"
 #include "elfio/elfio.hpp"
 #include "riscv/riscv.hpp"
@@ -37,7 +38,8 @@ private:
 public:
 
   CPU *cpu;
-  VirtualMemory *memory;
+
+  Memory *memory;
 
   Simulator(char *elf_path, SimulatorMode sim_mode);
 
