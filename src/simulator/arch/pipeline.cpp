@@ -27,7 +27,9 @@ void PipelineArch::fetch() {
 
   uint64_t valP = sim->cpu->get_pc();
 
-  auto instRaw = (uint32_t) sim->memory->read(valP, INST_SIZE, true);
+  int hit, time;
+  auto instRaw = (uint32_t) sim->memory->read(valP, INST_SIZE, hit, time);
+  cycle_cost += time;
   auto inst = new RVInstruction(instRaw, valP);
 
   nextF.bubbled = false;
@@ -471,47 +473,50 @@ void PipelineArch::memory() {
             valE);
   }
 
+  int hit = 0, time = 0;
+
   switch (inst->op) {
     case OP_LB:
-      valM = (int64_t) (int8_t) (uint8_t) sim->memory->read(valE, 1);
+      valM = (int64_t) (int8_t) (uint8_t) sim->memory->read(valE, 1, hit, time);
       break;
     case OP_LH:
-      valM = (int64_t) (int16_t) (uint16_t) sim->memory->read(valE, 2);
+      valM = (int64_t) (int16_t) (uint16_t) sim->memory->read(valE, 2, hit, time);
       break;
     case OP_LW:
-      valM = (int64_t) (int32_t) (uint32_t) sim->memory->read(valE, 4);
+      valM = (int64_t) (int32_t) (uint32_t) sim->memory->read(valE, 4, hit, time);
       break;
     case OP_LD:
-      valM = (int64_t) sim->memory->read(valE, 8);
+      valM = (int64_t) sim->memory->read(valE, 8, hit, time);
       break;
     case OP_LBU:
-      valM = (uint64_t) (uint8_t) sim->memory->read(valE, 1);
+      valM = (uint64_t) (uint8_t) sim->memory->read(valE, 1, hit, time);
       break;
     case OP_LHU:
-      valM = (uint64_t) (uint16_t) sim->memory->read(valE, 2);
+      valM = (uint64_t) (uint16_t) sim->memory->read(valE, 2, hit, time);
       break;
     case OP_LWU:
-      valM = (uint64_t) (uint32_t) sim->memory->read(valE, 4);
+      valM = (uint64_t) (uint32_t) sim->memory->read(valE, 4, hit, time);
       break;
     case OP_SB:
-      sim->memory->write(valE, 1, valB);
+      sim->memory->write(valE, 1, valB, hit, time);
       valM = 0;
       break;
     case OP_SH:
-      sim->memory->write(valE, 2, valB);
+      sim->memory->write(valE, 2, valB, hit, time);
       valM = 0;
       break;
     case OP_SW:
-      sim->memory->write(valE, 4, valB);
+      sim->memory->write(valE, 4, valB, hit, time);
       valM = 0;
       break;
     case OP_SD:
-      sim->memory->write(valE, 8, valB);
+      sim->memory->write(valE, 8, valB, hit, time);
       valM = 0;
       break;
     default:
       valM = 0;
   }
+  cycle_cost += time;
 
   // forward data
   if (dstE != NO_REG) {
@@ -714,7 +719,7 @@ void PipelineArch::inc_cycle() {
 }
 
 void PipelineArch::print_stats() {
-  if (!verbose) return;
+//  if (!verbose) return;
   fprintf(stderr, "Statistics:\n");
   fprintf(stderr, "  Number of instructions : %d\n", stats.inst_cnt);
   fprintf(stderr, "  Number of cycles       : %d\n", stats.cycle_cnt);

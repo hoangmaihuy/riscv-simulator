@@ -73,10 +73,9 @@ Memory::~Memory() {
   delete vm;
 }
 
-uint64_t Memory::read(uint64_t addr, unsigned int size, bool executable) {
+uint64_t Memory::read(uint64_t addr, unsigned int size, int &hit, int &time) {
   char buf[BLOCK_SIZE];
-  int hit, time;
-  l1->HandleRequest(addr, (int) size, 1, buf, hit, time);
+  vm->HandleRequest(addr, (int) size, 1, buf, hit, time);
   int offset = addr & (BLOCK_SIZE - 1);
   uint64_t val = 0;
   for (int i = 0; i < size; i++) {
@@ -86,14 +85,13 @@ uint64_t Memory::read(uint64_t addr, unsigned int size, bool executable) {
   return val;
 }
 
-void Memory::write(uint64_t addr, unsigned int size, uint64_t data) {
+void Memory::write(uint64_t addr, unsigned int size, uint64_t data, int &hit, int &time) {
   char buf[BLOCK_SIZE];
-  int hit, time;
   int offset = addr & (BLOCK_SIZE - 1);
   for (int i = 0; i < size; i++) {
     auto x = (uint8_t) data;
     buf[offset + i] = (char) x;
     data >>= 8;
   }
-  l1->HandleRequest(addr, (int) size, 0, buf, hit, time);
+  vm->HandleRequest(addr, (int) size, 0, buf, hit, time);
 }

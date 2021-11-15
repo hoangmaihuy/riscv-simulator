@@ -20,6 +20,7 @@ int64_t Simulator::syscall(int64_t sysnum, int64_t argument) {
   long long y;
   char ch;
   uint64_t addr;
+  int hit, time;
 
   switch (sysnum) {
     case SYS_exit:
@@ -52,7 +53,7 @@ int64_t Simulator::syscall(int64_t sysnum, int64_t argument) {
     case SYS_write_string:
       addr = argument;
       while (true) {
-        ch = (char) memory->read(addr, 1);
+        ch = (char) memory->read(addr, 1, hit, time);
         if (!ch) break;
         printf("%c", ch);
         addr++;

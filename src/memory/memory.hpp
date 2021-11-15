@@ -19,8 +19,8 @@
 #define LLC_HIT_LAT 20
 #define LLC_BUS_LAT 20
 #define MEM_HIT_LAT 100
-#define WRITE_THROUGH false
-#define WRITE_ALLOCATE true
+#define WRITE_THROUGH true
+#define WRITE_ALLOCATE false
 #define BLOCK_SIZE 64
 #define ASSOCIATIVITY 8
 
@@ -34,8 +34,8 @@ public:
   Memory();
   ~Memory();
 
-  uint64_t read(uint64_t addr, unsigned int size, bool executable = false);
-  void write(uint64_t addr, unsigned int size, uint64_t data);
+  uint64_t read(uint64_t addr, unsigned int size, int &hit, int &time);
+  void write(uint64_t addr, unsigned int size, uint64_t data, int &hit, int &time);
 };
 
 

@@ -13,13 +13,14 @@ uint64_t get_bits(uint64_t x, unsigned int lo, unsigned int hi) {
   return x << (63 - hi) >> (63 - hi + lo);
 }
 
-void Cache::SetConfig(CacheConfig cc) {
+bool Cache::SetConfig(CacheConfig cc) {
   // Check if config is valid
-  assert(is_power_of_two(cc.size));
-  assert(is_power_of_two(cc.set_num));
-  assert(is_power_of_two(cc.associativity));
-  assert(cc.set_num * cc.associativity < cc.size);
-  cc.block_size = cc.size / (cc.set_num * cc.associativity);
+  if (!is_power_of_two(cc.size)) return false;
+  if (!is_power_of_two(cc.block_size)) return false;
+  if (!is_power_of_two(cc.associativity)) return false;
+  if (cc.block_size * cc.associativity >= cc.size) return false;
+  cc.set_num = cc.size / (cc.block_size * cc.associativity);
+  if (!is_power_of_two(cc.set_num)) return false;
 
   config_ = cc;
 
@@ -38,6 +39,7 @@ void Cache::SetConfig(CacheConfig cc) {
       line.blocks = vector<char>(cc.block_size);
     }
   }
+  return true;
 }
 
 void Cache::HandleRequest(uint64_t addr, int bytes, int read,
@@ -62,11 +64,11 @@ void Cache::HandleRequest(uint64_t addr, int bytes, int read,
       line_idx = ReplaceAlgorithm(set_idx, time);
     } else {
       // return hit & time
-      if (read) {
+      if (read) { // read hit
         ReadRequest(set_idx, line_idx, block_offset, bytes, content);
-      } else {
+      } else { // write hit
         WriteRequest(set_idx, line_idx, block_offset, tag, bytes, content, !config_.write_through);
-        if (config_.write_through) {
+        if (config_.write_through) { // write through
           lower_->HandleRequest(addr, bytes, read, content, lower_hit, lower_time);
         }
       }
@@ -91,6 +93,7 @@ void Cache::HandleRequest(uint64_t addr, int bytes, int read,
     }
     // Replacement
     if (line_idx != -1 && (read || config_.write_allocate)) {
+      stats_.fetch_num++;
       WriteRequest(set_idx, line_idx, 0, tag, config_.block_size, content, false);
       time += latency_.bus_latency + latency_.hit_latency + lower_time;
       stats_.access_time += latency_.bus_latency + latency_.hit_latency;
@@ -169,6 +172,7 @@ int Cache::ReplaceAlgorithm(uint64_t set_idx, int &time) {
   }
 
   auto &line = lines[line_idx];
+  stats_.replace_num++;
 
   // Write back to lower layer
   if (line.valid && line.dirty) {

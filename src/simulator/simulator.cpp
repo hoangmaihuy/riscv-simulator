@@ -93,6 +93,8 @@ void Simulator::handle_cmd(const string &cmd) {
   string sym;
   char regname[5];
   uint64_t addr;
+  int hit, time;
+
   if (cmd == "r") { // run till end
     while (!exited)
       arch->run_cycle();
@@ -123,16 +125,16 @@ void Simulator::handle_cmd(const string &cmd) {
     }
   } else if (cmd == "wmb") { // watch memory byte
     cin >> std::hex >> addr;
-    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 1));
+    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 1, hit, time));
   } else if (cmd == "wmh") { // watch memory half
     cin >> std::hex >> addr;
-    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 2));
+    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 2, hit, time));
   } else if (cmd == "wmw") { // watch memory word
     cin >> std::hex >> addr;
-    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 4));
+    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 4, hit, time));
   } else if (cmd == "wmd") { // watch memory double
     cin >> std::hex >> addr;
-    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 8));
+    fprintf(stderr, "mem[0x%llx] = 0x%llx", addr, memory->read(addr, 8, hit, time));
   }
   cerr << "\n";
 }

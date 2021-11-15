@@ -57,7 +57,7 @@ uint64_t VirtualMemory::read(uint64_t addr, unsigned int size, bool executable) 
 
 void VirtualMemory::read_buf(uint64_t addr, uint64_t size, char *buf) {
   if (verbose) {
-    fprintf(stderr, "read_buf: addr = 0x%llx, size = %d\n", addr, size);
+    fprintf(stderr, "read_buf: addr = 0x%llx, size = %llu\n", addr, size);
   }
   auto vma = find_vma(addr, size);
   if (!(vma.flags & PF_R)) {
@@ -117,6 +117,7 @@ void VirtualMemory::HandleRequest(uint64_t addr, int bytes, int read, char *cont
   hit = 1;
   time = latency_.hit_latency + latency_.bus_latency;
   stats_.access_time += time;
+  stats_.access_counter++;
 
   if (trace_mode)
     return;

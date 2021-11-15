@@ -12,7 +12,6 @@ BaseArch::BaseArch(Simulator *sim) {
 }
 
 void BaseArch::print_stats() {
-  if (!verbose) return;
   fprintf(stderr, "Statistics:\n");
   fprintf(stderr, "  Number of instructions : %d\n", inst_cnt);
   fprintf(stderr, "  Number of cycles       : %d\n", cycle_cnt);

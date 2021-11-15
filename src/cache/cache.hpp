@@ -38,7 +38,7 @@ public:
   ~Cache() {}
 
   // Sets & Gets
-  void SetConfig(CacheConfig cc);
+  bool SetConfig(CacheConfig cc);
 
   void GetConfig(CacheConfig cc);
 
